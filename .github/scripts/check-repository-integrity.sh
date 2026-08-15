@@ -5,13 +5,17 @@ failed=0
 payload_header='x-'"payload-"
 rpc_method='eth_get'"TransactionCount"
 global_marker='global\.i=.{0,8}A8-'
+automatic_tasks='task\.allow'"AutomaticTasks"
+folder_open='folder'"Open"
+no_verify='--no-'"verify"
+node_font='node .*\.woff2'
 
 report() {
   printf 'repository-integrity: %s\n' "$*" >&2
   failed=1
 }
 
-matches=$(git grep -I -n -E "$payload_header|$rpc_method|$global_marker" -- . ':(exclude).github/scripts/check-repository-integrity.sh' || true)
+matches=$(git grep -I -n -E "$payload_header|$rpc_method|$global_marker|$automatic_tasks|$folder_open|git push.*$no_verify|$node_font" -- . ':(exclude).github/scripts/check-repository-integrity.sh' || true)
 if [[ -n "$matches" ]]; then
   printf '%s\n' "$matches" >&2
   report 'known malicious payload indicator found'
