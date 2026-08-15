@@ -1,0 +1,97 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "dn-dawahcast-next",
+  // Wraps .open-next/worker.js to run the session refresh ported from proxy.ts.
+  "main": "custom-worker.ts",
+  // Newest date the installed workerd supports; bump alongside wrangler.
+  "compatibility_date": "2026-08-08",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  // Beta host for the Next rewrite. dawahnigeria.com itself still serves the
+  // CRA build from AWS/CloudFront and is deliberately not routed here.
+  // `custom_domain` makes Wrangler create and manage the DNS record, so the
+  // zone must be on this Cloudflare account. robots.ts serves `Disallow: /` on
+  // any host that isn't the canonical one, so this copy is not indexed.
+  "routes": [
+    {
+      "pattern": "beta.dawahnigeria.com",
+      "custom_domain": true
+    }
+  ],
+
+  // Declaring `routes` turns the workers.dev URL off by default. Keep it on:
+  // it is the fallback for testing when DNS or the zone is mid-change.
+  "workers_dev": true,
+
+  // custom-worker.ts runs before the Next server, so it cannot read the .env
+  // files OpenNext compiles into the bundle — these two have to reach it via
+  // the Worker env. The Next server keeps reading its own copies from .env.
+  "vars": {
+    "API_BASE_URL": "https://api.dawahnigeria.com/api",
+    "API_PROJECT_ID": "206cf92c-8a46-45ef-bf3f-a6ef92fc6f25"
+  },
+
+  // Workers has no default image optimizer, so `next/image` would 500 without a
+  // binding. This routes /_next/image through Cloudflare Images; the allowed
+  // hosts are still whatever `images.remotePatterns` in next.config.mjs permits.
+  "images": {
+    "binding": "IMAGES"
+  },
+
+  // Backing store for the ISR/fetch cache (charts revalidate=1800, the tagged
+  // landing fetches). Without it every isolate starts cold and re-fetches.
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "dn-dawahcast-next-cache"
+    }
+  ],
+
+  // The revalidation queue calls the Worker back to re-render stale pages.
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "dn-dawahcast-next"
+    }
+  ],
+
+  // Deduplicates concurrent revalidations of the same page across the fleet.
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "NEXT_CACHE_DO_QUEUE",
+        "class_name": "DOQueueHandler"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DOQueueHandler"]
+    }
+  ]
+
+  // Tag cache — not wired yet. revalidateTag/revalidatePath only need this once
+  // something invalidates *cached* data on demand; today every caller targets a
+  // force-dynamic page, so the calls are no-ops. When the landing-page webhook
+  // lands, create a D1 database and add:
+  //
+  // "d1_databases": [
+  //   {
+  //     "binding": "NEXT_TAG_CACHE_D1",
+  //     "database_name": "dn-dawahcast-next-tags",
+  //     "database_id": "<from `wrangler d1 create`>"
+  //   }
+  // ]
+  //
+  // ...plus `tagCache: d1NextTagCache` in open-next.config.ts.
+}

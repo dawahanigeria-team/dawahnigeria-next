@@ -1,0 +1,255 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Palette copied verbatim from the CRA app's src/App.css so both apps resolve
+   to identical colours. Do not "tidy" these values — they are matched against
+   the live site, not chosen. */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 11% 11%;
+
+    --muted: 240 0% 45%;
+    --muted-foreground: 0 0% 3%;
+
+    --color: 240 10% 36%;
+    --color-foreground: 240 11% 11%;
+    --color-primary: 0 0% 1%;
+
+    --actions: 32 100% 100%;
+    --border: 216 5% 86%;
+    --input: 214.3 31.8% 91.4%;
+    --hover: 220 3% 92%;
+    --search: 0 0% 100%;
+    --comment: 0 0% 96%;
+    --auth: 0 0% 98%;
+
+    /* Brand lime (#ddff2b) with near-black text — the pairing every real CTA in
+       the app already uses by hand (DownloadButton, the leaderboard card, CRA's
+       `.landing_mobile_leaderboard_button`). These were previously white on
+       white in this theme, and #212121 on #0d0d0d in dark: both unreadable, and
+       the reason the leaderboard's "Login to participate" button looked
+       disabled. Contrast is ~13:1 on the lime in both themes. */
+    --primary: 70 100% 58%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 0 0% 10%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --ring: 215 20.2% 65.1%;
+
+    --radius: 0.5rem;
+    --footer: 32 0% 82%;
+  }
+
+  .dark {
+    --background: 0 0% 1%;
+    --foreground: 0 0% 100%;
+
+    /* --muted is the subtle *surface*, --muted-foreground the subtle *text*, so
+       in dark they move in opposite directions. CRA had both at 83%, which made
+       `bg-muted` + `text-muted-foreground` a 1:1 grey-on-grey blob (the search
+       language badge, the disabled pagination buttons) and painted every
+       skeleton light grey on a near-black page. 20% sits above --hover (13%) so
+       chips still read as chips; contrast against the 83% text is ~8.5:1. */
+    --muted: 240 0% 20%;
+    --muted-foreground: 240 0% 83%;
+
+    --color: 220 0% 53%;
+    --color-foreground: 68 100% 100%;
+    --color-primary: 0 0% 88%;
+
+    --search: 32 0% 4%;
+    --actions: 32 100% 100%;
+    --border: 216 0% 64%;
+    --input: 32 0% 13%;
+    --hover: 220 0% 13%;
+    --comment: 0 0% 13%;
+    --auth: 0 0% 21%;
+
+    /* Same pairing in dark. The old values were hue 32 at 0% saturation — a hue
+       set without saturation is just grey, which is how this ended up as a
+       near-black label on a dark-grey button. */
+    --primary: 70 100% 58%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 5%;
+    --secondary-foreground: 0 0% 80%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    --ring: 217.2 32.6% 17.5%;
+    --footer: 32 0% 13%;
+  }
+
+  html,
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* ─── Auth page animations ───────────────────────────────────────────────────
+   Ported from CRA's auth.scss / loginform.scss. Kept as plain CSS rather than
+   Tailwind arbitrary values because keyframes can't be expressed inline. */
+@keyframes auth-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -30px) scale(1.05); }
+  66%      { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+@keyframes auth-fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-orb {
+  animation: auth-float 20s ease-in-out infinite;
+  filter: blur(60px);
+}
+
+.auth-fade-up {
+  animation: auth-fade-in-up 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-orb,
+  .auth-fade-up {
+    animation: none;
+  }
+}
+
+/* Faint square lattice behind the Ramadan page (CRA .ramadan-geometric-bg).
+   Written as a plain class rather than a Tailwind arbitrary value: a
+   multi-gradient `background-image` contains commas, which breaks the
+   arbitrary-value parser. */
+.ramadan-grid-bg {
+  background-image:
+    linear-gradient(to right, currentColor 1px, transparent 1px),
+    linear-gradient(to bottom, currentColor 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Hides the scrollbar on the horizontal card rows, as CRA's
+   `.overflow_auto_wrapper::-webkit-scrollbar { display: none }` does.
+   A real class rather than `[&::-webkit-scrollbar]:hidden` because that utility
+   only covers WebKit; this also sets `scrollbar-width` for Firefox and
+   `-ms-overflow-style`. (The arbitrary-variant form does compile — the `screens`
+   trap in tailwind.config.ts disables the `min-*`/`max-*` variants specifically,
+   not arbitrary selector variants.)
+   The row stays scrollable by wheel, trackpad, touch and keyboard. */
+/* Hero carousel. CRA ships two entirely different carousels switched on a JS
+   media query at 615px: `MyCarousel` on desktop (a 73%-wide track, so the next
+   slide peeks) and a react-slick `fade` slider on mobile (one full-width slide
+   cross-fading in place). One component covers both here, because rendering two
+   would load every hero image twice.
+
+   The switch cannot be expressed in Tailwind: the track's translate is an inline
+   style, and no variant can unset an inline `transform`. Driving it through a
+   custom property lets the media query win. */
+/* Hero carousel.
+
+   CRA ships two different carousels either side of 615px (a JS media query in
+   Landing.jsx), and they are not variants of one another:
+
+     desktop  `MyCarousel` + carousel.css — a three-layer card deck. Slides are
+              73% wide and absolutely stacked; the next one sits 22% to the
+              right at 0.9 scale and 30% brightness, the one after at 45%/0.8/
+              50%. The frame clips them, which is what makes the peek.
+     mobile   a react-slick `fade` slider — one full-width slide cross-fading.
+
+   Both are expressed here as data-state on stacked slides, so one component
+   serves both and the hero images are requested once. */
+.hero-frame {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 20px;
+  margin-bottom: 3rem;
+  box-shadow:
+    0 20px 60px rgb(0 0 0 / 0.4),
+    0 0 0 1px rgb(63 63 70 / 0.3);
+}
+
+.hero-slide {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 73%;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    transform 500ms ease,
+    opacity 500ms ease,
+    filter 500ms ease;
+}
+.hero-slide[data-state="active"] {
+  opacity: 1;
+  visibility: visible;
+  z-index: 10;
+  transform: scale(1);
+}
+.hero-slide[data-state="preactive"] {
+  opacity: 1;
+  visibility: visible;
+  z-index: 7;
+  transform: translateX(22%) scale(0.9);
+  filter: brightness(30%);
+}
+.hero-slide[data-state="third"] {
+  opacity: 1;
+  visibility: visible;
+  z-index: 5;
+  transform: translateX(45%) scale(0.8);
+  filter: brightness(50%);
+}
+
+@media (max-width: 615px) {
+  .hero-frame {
+    height: 180px;
+    border-radius: 16px;
+    margin: 1rem 0.25rem 1.5rem;
+    box-shadow:
+      0 12px 40px rgb(0 0 0 / 0.3),
+      0 0 0 1px rgb(63 63 70 / 0.3);
+  }
+  /* One full-width slide, cross-fading: no deck, no peek, no dimming. */
+  .hero-slide {
+    width: 100%;
+    transform: none;
+    filter: none;
+  }
+  .hero-slide[data-state="preactive"],
+  .hero-slide[data-state="third"] {
+    opacity: 0;
+    visibility: hidden;
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    transition: none;
+  }
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

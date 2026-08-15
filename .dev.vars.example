@@ -1,0 +1,6 @@
+# Copy to .dev.vars (gitignored). Read by `wrangler dev` / `opennextjs-cloudflare
+# preview` only — `next dev` keeps using .env.local.
+#
+# Selects which .env file Next loads inside the Worker. Defaults to "production"
+# when unset, which would make a local preview read .env.production.
+NEXTJS_ENV=development
