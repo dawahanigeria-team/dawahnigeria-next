@@ -1,0 +1,40 @@
+# Runs on `pull_request`, deliberately NOT `pull_request_target`: fork PRs get
+# checks without any access to repository secrets.
+name: PR CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      # Builds with only the committed .env files — no secrets. This is the same
+      # position a first-time contributor is in, so a green build here means a
+      # fresh clone builds too.
+      - run: pnpm build
