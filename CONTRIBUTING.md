@@ -26,8 +26,11 @@ coordinated, and it is easy to duplicate someone else's in-flight effort.
 
 ## Getting set up
 
-You need **Node.js 20.9+** and **pnpm 11**. The repository pins pnpm via the
+You need **Node.js 22.13+** and **pnpm 11**. The repository pins pnpm via the
 `packageManager` field — enable Corepack and it resolves automatically.
+
+Node 22.13 is a hard floor: pnpm 11 uses `node:sqlite`, so anything older fails
+with `ERR_UNKNOWN_BUILTIN_MODULE` before your code is even reached.
 
 ```bash
 corepack enable

@@ -27,9 +27,13 @@ lecture audio itself, are not part of this repository.
 
 ## Getting started
 
-You need **Node.js 20.9+** and **pnpm 11**. The repository pins pnpm through the
+You need **Node.js 22.13+** and **pnpm 11**. The repository pins pnpm through the
 `packageManager` field, so [Corepack](https://nodejs.org/api/corepack.html) will
-select the right version automatically:
+select the right version automatically.
+
+> Node 22.13 is a hard floor, not a suggestion — pnpm 11 uses `node:sqlite`, so
+> on Node 20 it dies with `ERR_UNKNOWN_BUILTIN_MODULE: No such built-in module:
+> node:sqlite` before it gets anywhere near your code.
 
 ```bash
 corepack enable

@@ -25,7 +25,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # 22.13 is the floor for the pinned pnpm, which needs node:sqlite.
+          node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
