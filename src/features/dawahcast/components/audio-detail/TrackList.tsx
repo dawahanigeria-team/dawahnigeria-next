@@ -28,6 +28,11 @@ type Props = {
  * Album/playlist track table, matching the live layout:
  * `# | Title | Lecturer | Time` with the lecturer and time columns dropping
  * below 615px.
+ *
+ * The mobile track is three columns, not two. Only the lecturer is hidden below
+ * 615px — the action buttons stay — and a `display:none` element leaves the grid
+ * entirely, so a two-column track auto-placed the actions onto a second row
+ * inside the 2.5rem number column.
  */
 export function TrackList({
   tracks,
@@ -62,7 +67,7 @@ export function TrackList({
           return (
             <li
               key={`${id}-${i}`}
-              className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-4 border-b border-white/5 px-3 py-3 transition-colors hover:bg-white/[0.03] mobile-up:grid-cols-[2.5rem_minmax(0,1fr)_14rem_auto]"
+              className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-4 border-b border-white/5 px-3 py-3 transition-colors hover:bg-white/[0.03] mobile-up:grid-cols-[2.5rem_minmax(0,1fr)_14rem_auto]"
             >
               <span className="text-sm tabular-nums text-color">{i + 1}</span>
 
