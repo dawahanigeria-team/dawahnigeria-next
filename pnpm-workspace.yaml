@@ -1,6 +1,13 @@
+# Which dependencies may run install scripts. pnpm blocks them by default as a
+# supply-chain measure, and refuses to install at all while any entry here is
+# unresolved — so every one of these needs an explicit true/false.
+#
+# The four set to `true` all install a platform-specific native binary that the
+# package is useless without. core-js is `false`: its postinstall only prints a
+# funding banner, so there is no reason to run arbitrary code for it.
 allowBuilds:
-  '@sentry/cli': set this to true or false
-  core-js: set this to true or false
-  esbuild: set this to true or false
-  unrs-resolver: set this to true or false
-  workerd: set this to true or false
+  '@sentry/cli': true # downloads the sentry-cli binary (source-map upload)
+  core-js: false # postinstall is a funding banner only
+  esbuild: true # platform binary; bundling fails without it
+  unrs-resolver: true # native resolver used by eslint-plugin-import
+  workerd: true # the Cloudflare Workers runtime binary
