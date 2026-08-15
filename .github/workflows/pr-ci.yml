@@ -35,7 +35,10 @@ jobs:
 
       - run: pnpm typecheck
 
-      # Builds with only the committed .env files — no secrets. This is the same
-      # position a first-time contributor is in, so a green build here means a
-      # fresh clone builds too.
+      # The exact step CONTRIBUTING tells a new contributor to run. .env.example
+      # holds only public values, so this keeps CI in the same position as a
+      # first-time contributor: a green build here means a fresh clone builds.
+      # lib/env.ts hard-fails on a missing API_BASE_URL, which lives only here.
+      - run: cp .env.example .env.local
+
       - run: pnpm build
