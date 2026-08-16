@@ -134,6 +134,32 @@ refresh sessions before the Next server boots.
 Deployment is handled by maintainers. Contributors do not need Cloudflare
 credentials for anything in this repository.
 
+### Cloudflare Workers Builds settings
+
+Two settings that are easy to get wrong, because a plain Next.js configuration
+looks correct and fails only at deploy time:
+
+| Setting | Value |
+| --- | --- |
+| Build command | `pnpm cf:build` |
+| Deploy command | `npx wrangler deploy` |
+
+**The build command must be `cf:build`, not `build`.** `pnpm build` is plain
+`next build` and produces only `.next/`. The deploy step delegates to
+`opennextjs-cloudflare deploy`, which needs `.open-next/.build/open-next.config.mjs`
+— so a `build` command succeeds and then the deploy fails with *"Could not find
+compiled Open Next config"*. `cf:build` runs `next build` internally, so nothing
+is lost by using it.
+
+**Cloudflare has two separate variable panes and they are not interchangeable.**
+Settings → *Variables and secrets* binds values to the **running Worker**
+(`env.X`, which is what `custom-worker.ts` reads). `next build` runs in a
+**build container** reading `process.env`, which that pane does not populate.
+This repository sidesteps the problem by committing its non-secret config to
+`.env.production`, so no build variables need to be configured at all — but if
+you ever add a build-time value, it goes in Settings → **Build** → variables,
+not the runtime pane.
+
 ## Which repository should I contribute to?
 
 There are two public frontends and they are not interchangeable:
