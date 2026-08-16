@@ -35,10 +35,9 @@ jobs:
 
       - run: pnpm typecheck
 
-      # The exact step CONTRIBUTING tells a new contributor to run. .env.example
-      # holds only public values, so this keeps CI in the same position as a
-      # first-time contributor: a green build here means a fresh clone builds.
-      # lib/env.ts hard-fails on a missing API_BASE_URL, which lives only here.
-      - run: cp .env.example .env.local
-
+      # No .env.local is created on purpose. The committed .env.production
+      # carries everything lib/env.ts requires, so this build runs under exactly
+      # the same conditions as Cloudflare Workers Builds and a contributor's
+      # fresh clone. If this step needs a secret to pass, the build is broken for
+      # forks too.
       - run: pnpm build
