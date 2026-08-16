@@ -10,7 +10,7 @@ import { formatNumber } from "@/lib/formatNumber";
 import { YouTubeEmbed } from "@/features/dawahcast/components/video-detail/YouTubeEmbed";
 import { CommentSection } from "@/features/comments/CommentSection";
 import { ROUTES } from "@/lib/routes";
-import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
+import { OG_FALLBACK_IMAGE, socialImageUrl } from "@/lib/socialMeta";
 
 type Params = { id: string };
 
@@ -36,14 +36,14 @@ export async function generateMetadata({
       type: "video.other",
       title: video.title,
       description,
-      images: [{ url: video.thumbnail || OG_FALLBACK_IMAGE }],
+      images: [{ url: socialImageUrl(video.thumbnail) || OG_FALLBACK_IMAGE }],
       url: ROUTES.video(id),
     },
     twitter: {
       card: "player",
       title: video.title,
       description,
-      images: [video.thumbnail || OG_FALLBACK_IMAGE],
+      images: [socialImageUrl(video.thumbnail) || OG_FALLBACK_IMAGE],
     },
   };
 }

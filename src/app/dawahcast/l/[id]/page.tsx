@@ -24,6 +24,7 @@ import type { PlayerTrack } from "@/features/player/types";
 import { ROUTES } from "@/lib/routes";
 import {
   OG_FALLBACK_IMAGE,
+  socialImageUrl,
   lectureShareDescription,
   isUsableDescription,
 } from "@/lib/socialMeta";
@@ -57,7 +58,7 @@ export async function generateMetadata({
   const shareTitle = lecture.lecturer
     ? `${lecture.title} — ${lecture.lecturer}`
     : lecture.title;
-  const images = [lecture.image || OG_FALLBACK_IMAGE];
+  const images = [socialImageUrl(lecture.image) || OG_FALLBACK_IMAGE];
 
   return {
     title: lecture.title,

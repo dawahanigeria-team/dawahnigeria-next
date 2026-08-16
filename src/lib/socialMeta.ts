@@ -9,6 +9,24 @@
 export const OG_FALLBACK_IMAGE = "/brand/og-default.png";
 
 /**
+ * Upgrade a catalogue image URL to the largest version the media server holds.
+ *
+ * The API hands back `/dc_images/thumbnails/<id>.jpg`, which is **100x80** for
+ * every row — below the minimum every social platform requires, so WhatsApp and
+ * Facebook silently rendered link previews with no image at all. The same id
+ * without the `thumbnails/` segment is 250x200, which clears Facebook's 200x200
+ * floor.
+ *
+ * 250x200 is still small: it earns a thumbnail-sized preview rather than a
+ * large card, and the media library has nothing bigger. Fixing that properly
+ * means generating composed 1200x630 cards or re-encoding the source artwork.
+ */
+export function socialImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  return url.replace("/dc_images/thumbnails/", "/dc_images/");
+}
+
+/**
  * Share text for a single lecture.
  *
  * The API's own `description` is technical metadata — "Language: Yoruba.\nSize:

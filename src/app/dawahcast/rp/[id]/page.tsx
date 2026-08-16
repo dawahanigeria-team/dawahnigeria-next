@@ -19,7 +19,7 @@ import { FavoriteButton } from "@/features/favorites/FavoriteButton";
 import { CommentSection } from "@/features/comments/CommentSection";
 import type { PlaylistListItem } from "@/features/dawahcast/server/listings";
 import { ROUTES } from "@/lib/routes";
-import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
+import { OG_FALLBACK_IMAGE, socialImageUrl } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, JsonLd } from "@/lib/JsonLd";
 
@@ -45,14 +45,14 @@ export async function generateMetadata({
       type: "profile",
       title: lecturer.name,
       description,
-      images: [{ url: lecturer.image || OG_FALLBACK_IMAGE }],
+      images: [{ url: socialImageUrl(lecturer.image) || OG_FALLBACK_IMAGE }],
       url: ROUTES.resourcePerson(id),
     },
     twitter: {
       card: "summary",
       title: lecturer.name,
       description,
-      images: [lecturer.image || OG_FALLBACK_IMAGE],
+      images: [socialImageUrl(lecturer.image) || OG_FALLBACK_IMAGE],
     },
   };
 }
