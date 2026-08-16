@@ -69,7 +69,7 @@ export default async function RamadanYearPage({
       <div className="mb-8 flex items-center gap-4">
         <BackLink variant="button" />
         <p className="font-cormorant text-2xl font-bold text-foreground">
-          Ramadan Tafseer{" "}
+          Ramadan Tafseer <span>{year}</span>{" "}
           <span className="text-base font-medium" style={{ color: "#D4AF37" }}>
             AH
           </span>

@@ -4,6 +4,7 @@ import { LectureCard } from "./LectureCard";
 import { PageNav } from "./PageNav";
 import type { LectureSummary } from "../server/landing";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 /**
  * Shared layout for the four `/dawahcast/more/*` pages.
@@ -26,6 +27,10 @@ export function MoreListing({
 }) {
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      {/* Live renders both this card and the breadcrumb below it on mobile —
+          its `desktop_heading` class is only ever styled nested inside
+          genredetail.scss, so it never actually hides here. */}
+      <PageHeaderRouter title={title} />
       <nav className="mb-6 flex items-center gap-3 text-sm" aria-label="Breadcrumb">
         <Link
           href={ROUTES.home}

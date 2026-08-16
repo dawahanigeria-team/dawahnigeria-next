@@ -11,6 +11,9 @@ import { formatNumber } from "@/lib/formatNumber";
 // module here would pull lib/api → lib/env into the client bundle and throw.
 import type { Video } from "../server/video";
 import { videoCategories } from "../videoFields";
+import { InfiniteFooter } from "./InfiniteFooter";
+import { useInfiniteItems } from "../useInfiniteItems";
+import { fetchVideosPage } from "../server/listingActions";
 
 /** Hardcoded in CRA's `pages/videos/data.js` — an editorial list, not an API. */
 const CATEGORIES = [
@@ -106,10 +109,23 @@ export function VideoHub({
   videos,
   curated,
 }: {
+  /** Page 1, server-rendered. Later pages are appended as the user scrolls. */
   videos: Video[];
   curated: Video[];
 }) {
   const [active, setActive] = useState("All");
+
+  const {
+    items: allVideos,
+    sentinelRef,
+    loading,
+    done,
+    failed,
+    retry,
+  } = useInfiniteItems({
+    initialItems: videos,
+    loadPage: fetchVideosPage,
+  });
 
   const { featured, trending, rest } = useMemo(() => {
     // Declared inside the memo so `active` is the only dependency that matters
@@ -123,7 +139,7 @@ export function VideoHub({
             ),
           );
 
-    const sortedByViews = [...inCategory(videos)].sort(
+    const sortedByViews = [...inCategory(allVideos)].sort(
       (a, b) => b.views - a.views,
     );
     const curatedFiltered = inCategory(curated);
@@ -138,11 +154,11 @@ export function VideoHub({
       .slice(0, 6);
     const trendingIds = new Set(trending.map((v) => String(v.id)));
 
-    const rest = inCategory(videos).filter(
+    const rest = inCategory(allVideos).filter(
       (v) => !featuredIds.has(String(v.id)) && !trendingIds.has(String(v.id)),
     );
     return { featured, trending, rest };
-  }, [videos, curated, active]);
+  }, [allVideos, curated, active]);
 
   const empty = featured.length === 0 && trending.length === 0 && rest.length === 0;
 
@@ -238,6 +254,19 @@ export function VideoHub({
           )}
         </>
       )}
+
+      {/* Outside the empty branch on purpose: when a category matches nothing
+          in the pages loaded so far, the sentinel still has to keep pulling —
+          a later page may well contain matches. */}
+      <InfiniteFooter
+        sentinelRef={sentinelRef}
+        loading={loading}
+        done={done}
+        failed={failed}
+        onRetry={retry}
+        loadedCount={allVideos.length}
+        itemNoun="videos"
+      />
     </>
   );
 }

@@ -6,6 +6,7 @@ import { PageNav, parsePage } from "@/features/dawahcast/components/PageNav";
 import { getSession } from "@/features/auth/session";
 import { getUserPlaylists } from "@/features/library/server";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 const PAGE_SIZE = 10;
 
@@ -34,6 +35,7 @@ export default async function NewPage({
     // This page runs its own editorial palette rather than the app theme —
     // matching the live site, which scopes those CSS variables to `/new`.
     <div className="flex w-full flex-col bg-[#0f1117] px-[3%] pb-16 pt-8">
+      <PageHeaderRouter title="New" />
       <section className="mb-10 border-b border-[rgba(212,165,116,0.15)] pb-8">
         <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(212,165,116,0.15)] bg-[rgba(212,165,116,0.1)] px-3.5 py-1.5">
           <span className="h-1.5 w-1.5 rounded-full bg-[#d4a574]" aria-hidden />

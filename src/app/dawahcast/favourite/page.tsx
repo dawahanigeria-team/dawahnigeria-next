@@ -11,6 +11,7 @@ import { LecturerCard } from "@/features/dawahcast/components/LecturerCard";
 import { PlaylistCard } from "@/features/dawahcast/components/PlaylistCard";
 import { FavoriteButton } from "@/features/favorites/FavoriteButton";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 const TABS: Array<{
   key: FavoriteType;
@@ -52,6 +53,7 @@ export default async function FavouritePage({
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <PageHeaderRouter title="Favourites" />
       <h1 className="text-2xl font-semibold text-foreground">Favorites</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Items you&apos;ve saved on DawahCast.

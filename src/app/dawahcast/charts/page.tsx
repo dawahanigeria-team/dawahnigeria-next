@@ -9,6 +9,7 @@ import {
 import { ChartRow } from "@/features/dawahcast/components/charts/ChartRow";
 import type { ChartKind } from "@/features/dawahcast/server/charts";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const metadata: Metadata = {
   title: "Charts - Get islamic resources on Dawah Nigeria",
@@ -52,6 +53,7 @@ export default async function ChartsPage() {
     // There is no live design to match here, so this keeps the working
     // implementation, laid out with the shell's standard page padding.
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <PageHeaderRouter title="Charts" />
       <h1 className="text-2xl font-semibold text-foreground">Charts</h1>
       <p className="mt-1 text-sm text-color">
         The most popular content on Dawah Nigeria.

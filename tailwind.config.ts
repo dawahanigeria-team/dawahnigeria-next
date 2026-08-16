@@ -18,6 +18,12 @@ const config: Config = {
       tab: { max: "767px" },
       "tab-up": "768px",
       narrow: { max: "1035px" },
+      "narrow-up": "1036px",
+      // CRA's mobile-only page header (HeaderRouter) hides at ≥600px, and drops
+      // its title a step at ≤480px. Named because the `screens` object disables
+      // arbitrary min-[…]/max-[…] variants outright.
+      "hroute-up": "600px",
+      xs: { max: "480px" },
       // Card-row headings step 22px → 20px here (CRA: max-width 900).
       mid: { max: "900px" },
       // Auth pages split from single-column to the 45/55 grid here.

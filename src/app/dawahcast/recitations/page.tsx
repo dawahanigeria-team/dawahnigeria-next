@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getRecitationAlbums } from "@/features/dawahcast/server/listings";
-import { AlbumCard } from "@/features/dawahcast/components/AlbumCard";
-import { PageNav, parsePage } from "@/features/dawahcast/components/PageNav";
+import { RecitationGrid } from "@/features/dawahcast/components/RecitationGrid";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 const PAGE_SIZE = 20;
 
@@ -12,36 +12,15 @@ export const metadata: Metadata = {
   alternates: { canonical: ROUTES.recitations },
 };
 
-export default async function RecitationsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { page: pageParam } = await searchParams;
-  const page = parsePage(pageParam);
-  const albums = await getRecitationAlbums(page, PAGE_SIZE);
+export default async function RecitationsPage() {
+  // Page 1 is server-rendered; later pages append as the sentinel appears.
+  const albums = await getRecitationAlbums(1, PAGE_SIZE);
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
       <h1 className="sr-only">Quran recitations</h1>
-      {albums.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-4 mobile-up:grid-cols-3 lg:grid-cols-5">
-          {albums.map((a, i) => (
-            <li key={`${a.nid ?? a.id}-${i}`}>
-              <AlbumCard album={a} />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="py-12 text-center text-sm text-color">
-          No recitations available yet.
-        </p>
-      )}
-      <PageNav
-        basePath={ROUTES.recitations}
-        page={page}
-        hasNext={albums.length >= PAGE_SIZE}
-      />
+      <PageHeaderRouter title="Quran" />
+      <RecitationGrid initialAlbums={albums} pageSize={PAGE_SIZE} />
     </div>
   );
 }

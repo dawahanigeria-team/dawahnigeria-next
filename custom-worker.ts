@@ -76,6 +76,14 @@ const worker = {
     ctx: ExecutionContext,
   ): Promise<Response> {
     const url = new URL(request.url);
+
+    // Keep a single indexable origin. This is an edge-level permanent redirect,
+    // so it preserves paths and query strings without waiting for Next.js.
+    if (url.hostname === "www.dawahnigeria.com") {
+      url.hostname = "dawahnigeria.com";
+      return Response.redirect(url, 308);
+    }
+
     if (SKIP_PREFIXES.some((p) => url.pathname.startsWith(p))) {
       return openNextHandler.fetch(request, env, ctx);
     }

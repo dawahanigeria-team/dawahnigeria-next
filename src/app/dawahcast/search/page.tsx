@@ -9,6 +9,7 @@ import {
 import { SearchControls } from "@/features/search/SearchControls";
 import { SearchResultRow } from "@/features/search/SearchResultRow";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,7 @@ export default async function SearchPage({
   if (!query) {
     return (
       <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+        <PageHeaderRouter title="Search" />
         <h1 className="text-2xl font-semibold text-foreground">Search</h1>
         <div className="mt-4">
           <SearchControls initialQuery="" sort={sort} />
@@ -130,6 +132,7 @@ export default async function SearchPage({
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <PageHeaderRouter title="Search" />
       <h1 className="text-2xl font-semibold text-foreground">Search</h1>
 
       <div className="mt-4">

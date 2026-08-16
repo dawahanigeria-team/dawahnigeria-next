@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.dawahnigeria.app",
+      "sha256_cert_fingerprints": [
+        "49:DA:BF:D6:41:A6:32:91:60:54:15:C9:B4:EE:F1:FF:31:C2:65:7A:36:29:17:EC:F7:04:37:ED:79:D7:C4:8A"
+      ]
+    }
+  }
+]

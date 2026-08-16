@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getLecturers, getStates } from "@/features/dawahcast/server/listings";
 import { LecturerBrowser } from "@/features/dawahcast/components/LecturerBrowser";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const metadata: Metadata = {
   title: "Lecturers - Get islamic resources on Dawah Nigeria",
@@ -16,6 +17,7 @@ export default async function LecturersPage() {
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
       <h1 className="sr-only">Lecturers</h1>
+      <PageHeaderRouter title="Lecturer" />
       <LecturerBrowser initialLecturers={lecturers} states={states} />
     </div>
   );

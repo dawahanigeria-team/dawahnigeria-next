@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getVideos, getCuratedVideos } from "@/features/dawahcast/server/video";
 import { VideoHub } from "@/features/dawahcast/components/VideoHub";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const metadata: Metadata = {
   title: "Videos - Get islamic resources on Dawah Nigeria",
@@ -19,6 +20,7 @@ export default async function VideosPage() {
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
       <h1 className="sr-only">Videos</h1>
+      <PageHeaderRouter title="Videos" />
       <VideoHub videos={videos} curated={curated} />
     </div>
   );

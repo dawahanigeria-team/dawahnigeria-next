@@ -8,6 +8,7 @@ import {
   DeleteAccountForm,
 } from "@/features/account/AccountForms";
 import { ROUTES } from "@/lib/routes";
+import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const metadata: Metadata = {
   title: "Account settings",
@@ -36,6 +37,7 @@ export default async function AccountPage() {
 
   return (
     <div className="mx-auto max-w-screen-md px-4 py-4 sm:py-6">
+      <PageHeaderRouter title="Account" />
       <h1 className="text-2xl font-semibold text-foreground">Account settings</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Manage your DawahCast profile.

@@ -15,7 +15,7 @@
  * Defaults to dark when no preference is saved, matching CRA's design intent.
  */
 const THEME_BOOTSTRAP =
-  "(function(){try{var t=localStorage.getItem('dn:theme');var d=t!=='light';document.documentElement.classList.toggle('dark',d);}catch(e){document.documentElement.classList.add('dark');}})();";
+  "(function(){try{var t=localStorage.getItem('dn:theme');var d=t==='system'?window.matchMedia('(prefers-color-scheme: dark)').matches:t!=='light';document.documentElement.classList.toggle('dark',d);}catch(e){document.documentElement.classList.add('dark');}})();";
 
 export function ThemeScript() {
   return <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP }} />;

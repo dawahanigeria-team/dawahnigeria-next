@@ -113,6 +113,12 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Entry animation for the mobile-only page header (CRA: headerRouter.scss). */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .auth-orb {
   animation: auth-float 20s ease-in-out infinite;
   filter: blur(60px);

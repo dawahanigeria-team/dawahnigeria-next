@@ -11,6 +11,7 @@ import {
   HeroSkeleton,
   LectureRowSkeleton,
 } from "@/features/dawahcast/components/Skeletons";
+import { ROUTES } from "@/lib/routes";
 
 // Render per-request so the build doesn't depend on upstream being reachable.
 // Per-fetch revalidate windows still cache responses across requests.
@@ -20,6 +21,8 @@ export const metadata: Metadata = {
   title: "Home",
   description:
     "Welcome to DawahCast — discover Islamic lectures, recitations, podcasts, and videos curated for you.",
+  alternates: { canonical: ROUTES.home },
+  openGraph: { url: ROUTES.home },
 };
 
 export default function DawahcastHomePage() {

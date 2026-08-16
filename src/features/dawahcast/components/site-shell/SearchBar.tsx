@@ -33,7 +33,7 @@ export function SearchBar() {
           type="search"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder="Search lecturers, lectures, albums..."
+          placeholder="Search lectures, lecturers..."
           aria-label="Search DawahCast"
           className="min-w-0 flex-auto border-none bg-transparent text-[15px] leading-[28px] text-black outline-none placeholder:text-[14px] placeholder:leading-[28px] placeholder:text-[#6b6b6b] [&::-webkit-search-cancel-button]:hidden"
         />

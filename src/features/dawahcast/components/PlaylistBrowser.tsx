@@ -32,6 +32,15 @@ function Chip({
 }
 
 /**
+ * Both filter rows scroll horizontally rather than wrapping, matching live
+ * (`playlist_filter_categories`: overflow-x auto, nowrap, one 30px row). Wrapping
+ * 16 categories + 10 languages costs ~800px of vertical space at 375px, which
+ * pushes the grid itself below the fold.
+ */
+const FILTER_ROW =
+  "flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-[10px] pt-[2px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
+/**
  * Public playlists with CRA's two filter rows (category, then language).
  *
  * The upstream returns every public playlist in one unfiltered call and CRA
@@ -68,7 +77,7 @@ export function PlaylistBrowser({
   return (
     <>
       <div
-        className="mb-3 flex flex-wrap items-center gap-2"
+        className={`mb-3 ${FILTER_ROW}`}
         role="radiogroup"
         aria-label="Filter playlists by category"
       >
@@ -87,7 +96,7 @@ export function PlaylistBrowser({
       </div>
 
       <div
-        className="mb-8 flex flex-wrap items-center gap-2"
+        className={`mb-8 ${FILTER_ROW}`}
         role="radiogroup"
         aria-label="Filter playlists by language"
       >

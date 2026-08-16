@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LecturerCard } from "./LecturerCard";
+import { InfiniteFooter } from "./InfiniteFooter";
+import { useInfiniteItems } from "../useInfiniteItems";
 import { fetchLecturers } from "../server/lecturerActions";
 import { FEATURED_LECTURERS, ALL_STATES } from "../featuredLecturers";
 import type { LecturerListItem } from "../server/listings";
@@ -76,6 +78,28 @@ export function LecturerBrowser({
     });
   }, [lecturerId, state]);
 
+  // `lecturers` is page 1 for the current filter; the hook appends from there
+  // and resets whenever a chip swaps that array out.
+  const loadPage = useCallback(
+    async (page: number) => {
+      // The featured-scholar view is a single lookup by id — that endpoint
+      // ignores `page` and would hand back the same record forever, appending
+      // duplicates on every scroll. Report "no more" instead.
+      if (lecturerId !== null) return [];
+      return fetchLecturers({ state, page });
+    },
+    [lecturerId, state],
+  );
+
+  const {
+    items,
+    sentinelRef,
+    loading,
+    done,
+    failed,
+    retry,
+  } = useInfiniteItems({ initialItems: lecturers, loadPage });
+
   function pickLecturer(id: number | null) {
     setLecturerId(id);
     setState(ALL_STATES);
@@ -105,7 +129,7 @@ export function LecturerBrowser({
       </div>
 
       <div
-        className="mb-8 flex flex-wrap items-center gap-2"
+        className="mb-8 flex items-center gap-2 overflow-x-auto overscroll-x-contain pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         role="radiogroup"
         aria-label="Filter by state"
       >
@@ -135,14 +159,25 @@ export function LecturerBrowser({
             </li>
           ))}
         </ul>
-      ) : lecturers.length > 0 ? (
-        <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-          {lecturers.map((l, i) => (
-            <li key={`${l.id}-${i}`}>
-              <LecturerCard lecturer={l} />
-            </li>
-          ))}
-        </ul>
+      ) : items.length > 0 ? (
+        <>
+          <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+            {items.map((l, i) => (
+              <li key={`${l.id}-${i}`}>
+                <LecturerCard lecturer={l} />
+              </li>
+            ))}
+          </ul>
+          <InfiniteFooter
+            sentinelRef={sentinelRef}
+            loading={loading}
+            done={done}
+            failed={failed}
+            onRetry={retry}
+            loadedCount={items.length}
+            itemNoun="lecturers"
+          />
+        </>
       ) : (
         <p className="py-12 text-center text-sm text-color" aria-live="polite">
           No lecturers match this filter.

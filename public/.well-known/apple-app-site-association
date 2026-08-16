@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "Y26B3N2A8U.com.dawahnigeria.app"
+        ],
+        "components": [
+          { "/": "/dawahcast/l/*", "comment": "Lecture links" },
+          { "/": "/dawahcast/a/*", "comment": "Album and Quran reciter links" },
+          { "/": "/dawahcast/pl/*", "comment": "Playlist links" },
+          { "/": "/dawahcast/p/*", "comment": "Legacy playlist links" },
+          { "/": "/dawahcast/rp/*", "comment": "Lecturer links" }
+        ]
+      }
+    ]
+  }
+}

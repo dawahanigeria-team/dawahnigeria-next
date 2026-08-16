@@ -16,12 +16,19 @@
     "enabled": true
   },
 
-  // Beta host for the Next rewrite. dawahnigeria.com itself still serves the
-  // CRA build from AWS/CloudFront and is deliberately not routed here.
-  // `custom_domain` makes Wrangler create and manage the DNS record, so the
-  // zone must be on this Cloudflare account. robots.ts serves `Disallow: /` on
-  // any host that isn't the canonical one, so this copy is not indexed.
+  // Serve the production apex and www host from this Worker. The custom Worker
+  // permanently redirects www to the apex so crawlers see one canonical host.
+  // Keep beta available for smoke tests; robots.ts blocks it from indexing.
+  // `custom_domain` makes Wrangler create and manage the DNS records.
   "routes": [
+    {
+      "pattern": "dawahnigeria.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.dawahnigeria.com",
+      "custom_domain": true
+    },
     {
       "pattern": "beta.dawahnigeria.com",
       "custom_domain": true

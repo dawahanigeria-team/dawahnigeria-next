@@ -22,7 +22,11 @@ const APP_STORE_URL = "https://apps.apple.com/ng/app/dawahnigeria-app/id67591933
 export function Header() {
   return (
     <header className="fixed inset-x-0 top-0 z-[15] h-fit border-b border-border bg-search p-[1%] mobile:w-full mobile:p-[2%] dark:border-b-0">
-      <div className="relative flex w-full flex-row items-center gap-6 narrow:gap-4 mobile:gap-1">
+      {/* Mobile-first gap chain on purpose: `mobile` (max-615) is declared
+          before `narrow` (max-1035) in tailwind.config, so a `mobile:` gap
+          loses to a `narrow:` one at 375px and the "Get app" pill gets pushed
+          off-screen. Min-width steps can't collide. */}
+      <div className="relative flex w-full flex-row items-center gap-2 mobile-up:gap-4 narrow-up:gap-6">
         <div className="flex shrink-0 flex-row items-center gap-4">
           <SidebarToggle />
           <Link
@@ -49,7 +53,7 @@ export function Header() {
         </div>
 
         {/* ≤615px gets a narrower inline field instead. */}
-        <div className="mx-1 hidden max-w-[200px] flex-auto mobile:flex mobile:items-center">
+        <div className="hidden max-w-[200px] flex-auto mobile:flex mobile:items-center">
           <SearchBar />
         </div>
 
