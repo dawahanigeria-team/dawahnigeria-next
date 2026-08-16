@@ -13,7 +13,6 @@ import { AlbumActions } from "@/features/dawahcast/components/audio-detail/Album
 import { getUserPlaylists } from "@/features/library/server";
 import { CommentSection } from "@/features/comments/CommentSection";
 import { ROUTES } from "@/lib/routes";
-import { OG_FALLBACK_IMAGE, socialImageUrl } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, durationToIso8601, JsonLd } from "@/lib/JsonLd";
 
@@ -36,18 +35,21 @@ export async function generateMetadata({
     title: album.title,
     description,
     alternates: { canonical: ROUTES.album(id) },
+    // No `images` on either block on purpose. Setting them here would override
+    // the sibling opengraph-image.tsx, which composes the album's artwork onto a
+    // 1200x630 branded canvas — the catalogue's own files are 250x200 at best,
+    // small enough that platforms show a thumbnail or nothing. Leaving images
+    // unset lets Next wire the generated card in automatically.
     openGraph: {
       type: "music.album",
       title: album.title,
       description,
-      images: [{ url: socialImageUrl(album.image) || OG_FALLBACK_IMAGE }],
       url: ROUTES.album(id),
     },
     twitter: {
       card: "summary_large_image",
       title: album.title,
       description,
-      images: [socialImageUrl(album.image) || OG_FALLBACK_IMAGE],
     },
   };
 }
