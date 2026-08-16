@@ -6,6 +6,9 @@ import { getSession } from "@/features/auth/session";
 export const metadata: Metadata = {
   title: "Sign in to Dawah Nigeria | Home of Islamic resources",
   description: "Sign in to your DawahCast account.",
+  // An account form has nothing to rank for, and indexing it competes with the
+  // real content for crawl budget.
+  robots: { index: false },
 };
 
 // Server Actions write cookies; the page itself must be dynamic so the

@@ -13,6 +13,7 @@ import { ThemeScript } from "@/features/dawahcast/components/site-shell/ThemeScr
 import { AnalyticsProvider } from "@/features/analytics/AnalyticsProvider";
 import { PlayerProvider } from "@/features/player/PlayerProvider";
 import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
+import { JsonLd, absoluteUrl } from "@/lib/JsonLd";
 import { WebVitals } from "@/features/analytics/WebVitals";
 import "./globals.css";
 
@@ -119,6 +120,43 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-screen font-sans antialiased">
+        {/* Site-wide identity. Organization is what a search engine attaches
+            brand results to; WebSite + SearchAction is what makes a sitelinks
+            search box possible. Both belong on every page, so they live here
+            rather than being repeated per route. */}
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": `${env.siteUrl}/#organization`,
+                name: "Dawah Nigeria",
+                alternateName: "DawahCast",
+                url: env.siteUrl,
+                logo: absoluteUrl(env.siteUrl, "/brand/og-default.png"),
+                description:
+                  "Dawah Nigeria is a library of Islamic lectures, Quranic recitations, podcasts and videos from scholars across Nigeria.",
+              },
+              {
+                "@type": "WebSite",
+                "@id": `${env.siteUrl}/#website`,
+                url: env.siteUrl,
+                name: "DawahCast",
+                publisher: { "@id": `${env.siteUrl}/#organization` },
+                inLanguage: "en",
+                potentialAction: {
+                  "@type": "SearchAction",
+                  target: {
+                    "@type": "EntryPoint",
+                    urlTemplate: `${env.siteUrl}/dawahcast/search?query={search_term_string}`,
+                  },
+                  "query-input": "required name=search_term_string",
+                },
+              },
+            ],
+          }}
+        />
         {/* Hosts the single <audio> element. It lives at the root, not in the
             dawahcast layout, so that no route change can unmount it and stop
             playback. The player's own chrome stays scoped to the app shell. */}

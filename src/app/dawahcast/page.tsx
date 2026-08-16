@@ -56,6 +56,14 @@ export default function DawahcastHomePage() {
     // CRA .landing_wrapper: `padding: 2rem 3% 4rem`. The horizontal value is a
     // percentage of the content column, so it tracks the sidebar's 240px.
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      {/* The home feed is built from carousels with their own h2s, so there was
+          no h1 on the site's most important page. Visually hidden because the
+          hero carousel is the design's title treatment, but it has to exist and
+          be in the streamed-in-first shell rather than inside a Suspense
+          boundary. */}
+      <h1 className="sr-only">
+        Dawah Nigeria — Islamic lectures, Quranic recitations and podcasts
+      </h1>
       <Suspense fallback={<HeroSkeleton />}>
         <HeroSection />
       </Suspense>

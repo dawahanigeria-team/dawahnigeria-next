@@ -7,6 +7,7 @@ import { getLanguages } from "@/features/dawahcast/server/languages";
 export const metadata: Metadata = {
   title: "Sign up on Dawah Nigeria | Home of Islamic resources",
   description: "Join DawahCast.",
+  robots: { index: false },
 };
 
 export const dynamic = "force-dynamic";

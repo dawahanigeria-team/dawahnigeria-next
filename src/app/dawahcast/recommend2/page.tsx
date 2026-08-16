@@ -4,6 +4,8 @@ import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRout
 
 export const metadata: Metadata = {
   title: "Podcast is coming soon on Dawah Nigeria",
+  // Placeholder page — see recommend1. Remove when Podcast ships.
+  robots: { index: false },
 };
 
 export default function PodcastPage() {

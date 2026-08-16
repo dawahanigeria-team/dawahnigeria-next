@@ -54,7 +54,10 @@ export function InfiniteFooter({
           </span>
         ) : done && loadedCount > 0 ? (
           <span>
-            {loadedCount} {itemNoun}
+            {loadedCount}{" "}
+            {/* Every noun passed here is a regular plural (lectures, albums,
+                videos, lecturers), so dropping the "s" is enough. */}
+            {loadedCount === 1 ? itemNoun.replace(/s$/, "") : itemNoun}
           </span>
         ) : null}
       </div>
