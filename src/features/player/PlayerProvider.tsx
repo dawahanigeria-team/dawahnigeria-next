@@ -65,6 +65,10 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // browser loading, not the user pausing, so the handler must ignore exactly
   // one such event or the store flips to paused and the new track never starts.
   const swappingSrc = useRef(false);
+  // Guards the one-time seek to the position restored from localStorage. Not
+  // state: flipping it must not re-render, and it is read in the same effect
+  // that sets it.
+  const restoredPosition = useRef(false);
 
   const track = usePlayer((s) => s.track);
   const playing = usePlayer((s) => s.playing);
@@ -82,14 +86,24 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (audio.src !== resolved) {
       if (!audio.paused) swappingSrc.current = true;
       audio.src = track.audioUrl;
-      // Restore position from persisted state on first mount only.
-      const persistedPosition = usePlayer.getState().position;
-      if (persistedPosition > 0) {
-        const seekOnce = () => {
-          audio.currentTime = persistedPosition;
-          audio.removeEventListener("loadedmetadata", seekOnce);
-        };
-        audio.addEventListener("loadedmetadata", seekOnce);
+      // Restore the persisted position, but only for the first src we load —
+      // that is the track rehydrated from localStorage on a cold start.
+      //
+      // Every later track change already zeroes `position` in the store, so
+      // reading it again here only opens a race: `timeupdate` fires ~4x/second
+      // and this effect runs after paint, so an event landing in between would
+      // put the *outgoing* track's timestamp back and seek the incoming track
+      // to it. The flag closes that window.
+      if (!restoredPosition.current) {
+        restoredPosition.current = true;
+        const persistedPosition = usePlayer.getState().position;
+        if (persistedPosition > 0) {
+          const seekOnce = () => {
+            audio.currentTime = persistedPosition;
+            audio.removeEventListener("loadedmetadata", seekOnce);
+          };
+          audio.addEventListener("loadedmetadata", seekOnce);
+        }
       }
       // Selecting a track while another is already playing leaves `playing`
       // true, so the play/pause effect below never re-runs. Start it here.
