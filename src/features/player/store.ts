@@ -20,8 +20,15 @@ type PlayerState = {
   sleepTimerEndsAt: number | null;
   playbackRate: PlaybackRate;
   repeatMode: RepeatMode;
+  /**
+   * Message shown in the player bar when a track cannot be played, e.g. the
+   * catalogue points at a file the media server no longer holds. Not persisted:
+   * it describes one failed attempt, not player state worth restoring.
+   */
+  error: string | null;
 
   // ─── Actions ───────────────────────────────────────────────────────────────
+  setError: (message: string | null) => void;
   /** Replace current track and (optionally) the queue around it. */
   playTrack: (track: PlayerTrack, queue?: PlayerTrack[]) => void;
   togglePlay: () => void;
@@ -52,12 +59,17 @@ export const usePlayer = create<PlayerState>()(
       sleepTimerEndsAt: null,
       playbackRate: 1,
       repeatMode: "off",
+      error: null,
+
+      setError: (message) => set({ error: message }),
 
       playTrack: (track, queue) =>
         set({
           track,
           queue: queue ?? [track],
           playing: true,
+          // A new selection clears any message left by the previous attempt.
+          error: null,
           position: 0,
           duration: 0,
         }),

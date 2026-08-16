@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -12,5 +12,5 @@ export default async function RamadanIdPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  redirect(ROUTES.ramadanYear(id));
+  permanentRedirect(ROUTES.ramadanYear(id));
 }

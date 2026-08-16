@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { permanentRedirect } from "next/navigation";
 import { ROUTES } from "@/lib/routes";
 
 /**
@@ -7,5 +7,5 @@ import { ROUTES } from "@/lib/routes";
  * grid → playlist detail), so the legacy route redirects there.
  */
 export default function MyPlaylistPage() {
-  redirect(ROUTES.library);
+  permanentRedirect(ROUTES.library);
 }

@@ -18,6 +18,9 @@ import type { PlayerTrack } from "./types";
  * unsupported codec — left `playing: true`: the control showed "pause" while
  * nothing played, and nothing was logged.
  */
+/** How many unplayable tracks to step over before giving up on a queue. */
+const MAX_SKIPS_IN_A_ROW = 3;
+
 function onPlayFailure(err: unknown) {
   const e = err as Error | undefined;
   // play() interrupted by a newer load; that newer call owns the state now.
@@ -69,6 +72,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // state: flipping it must not re-render, and it is read in the same effect
   // that sets it.
   const restoredPosition = useRef(false);
+  // Consecutive unplayable tracks, so auto-skip cannot run away down a queue
+  // whose files are all missing. Reset as soon as anything plays.
+  const failedInARow = useRef(0);
 
   const track = usePlayer((s) => s.track);
   const playing = usePlayer((s) => s.playing);
@@ -215,15 +221,43 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           }
         }}
         onPlay={() => {
+          // Anything playing means the run of dead tracks is over, and clears
+          // the skip notice so it does not linger over a working lecture.
+          failedInARow.current = 0;
+          usePlayer.getState().setError(null);
           usePlayer.getState().setPlaying(true);
           const current = usePlayer.getState().track;
           if (current) trackLecturePlay(forAnalytics(current));
         }}
         onError={() => {
           const media = audioRef.current?.error;
-          usePlayer.getState().setPlaying(false);
           console.error(
             `[player] media error ${media?.code ?? "?"}: ${media?.message || "could not load audio"}`,
+          );
+
+          // Roughly one in ten catalogue rows points at a file the media server
+          // no longer holds; the request 404s to an HTML error page and the
+          // element reports a format error. Stalling silently on it reads as a
+          // broken site, so step over the dead track and say why.
+          const { track, queue, next, setPlaying, setError } = usePlayer.getState();
+          const idx = queue.findIndex((t) => t.id === track?.id);
+          const hasNext = idx >= 0 && idx + 1 < queue.length;
+
+          // Bounded: an album whose files are all missing would otherwise race
+          // through every track in a fraction of a second.
+          if (hasNext && failedInARow.current < MAX_SKIPS_IN_A_ROW) {
+            failedInARow.current += 1;
+            setError("Lecture unavailable — skipping to the next one.");
+            next();
+            return;
+          }
+
+          failedInARow.current = 0;
+          setPlaying(false);
+          setError(
+            hasNext
+              ? "Several lectures in a row are unavailable. Please try another."
+              : "This lecture is unavailable right now.",
           );
         }}
         onPause={(e) => {

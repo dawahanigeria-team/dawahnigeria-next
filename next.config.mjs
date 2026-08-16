@@ -24,7 +24,10 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      { source: "/", destination: "/dawahcast", permanent: false },
+      // Permanent: the apex is the site's most linked URL, and a 307 tells
+      // search engines not to consolidate its ranking signals into the target.
+      // The app has never served content at "/" and is not going to.
+      { source: "/", destination: "/dawahcast", permanent: true },
       { source: "/dawahcast/home", destination: "/dawahcast", permanent: true },
     ];
   },

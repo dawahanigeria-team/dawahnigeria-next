@@ -38,6 +38,7 @@ export function PlayerBar({ audioRef }: Props) {
   const queue = usePlayer((s) => s.queue);
   const next = usePlayer((s) => s.next);
   const prev = usePlayer((s) => s.prev);
+  const error = usePlayer((s) => s.error);
 
   if (!track) return null;
 
@@ -96,10 +97,18 @@ export function PlayerBar({ audioRef }: Props) {
                 {track.title}
               </p>
             )}
-            {track.lecturer && (
-              <p className="truncate text-xs text-muted-foreground">
-                {track.lecturer}
+            {/* Replaces the lecturer line rather than adding a row: the bar is
+                fixed-height and a phone has no space for both. */}
+            {error ? (
+              <p role="status" className="truncate text-xs text-[#ff9d9d]">
+                {error}
               </p>
+            ) : (
+              track.lecturer && (
+                <p className="truncate text-xs text-muted-foreground">
+                  {track.lecturer}
+                </p>
+              )
             )}
           </div>
         </div>
