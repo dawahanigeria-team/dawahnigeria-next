@@ -12,6 +12,7 @@ import {
   LectureRowSkeleton,
 } from "@/features/dawahcast/components/Skeletons";
 import { ROUTES } from "@/lib/routes";
+import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
 
 // Render per-request so the build doesn't depend on upstream being reachable.
 // Per-fetch revalidate windows still cache responses across requests.
@@ -22,7 +23,32 @@ export const metadata: Metadata = {
   description:
     "Welcome to DawahCast — discover Islamic lectures, recitations, podcasts, and videos curated for you.",
   alternates: { canonical: ROUTES.home },
-  openGraph: { url: ROUTES.home },
+  // Declaring `openGraph` replaces the root layout's block rather than merging
+  // into it, so type, siteName and the share image all have to be repeated
+  // here. Setting only `url` previously dropped all three.
+  openGraph: {
+    type: "website",
+    siteName: "DawahCast",
+    title: "DawahCast — Islamic lectures, recitations & podcasts",
+    description:
+      "Welcome to DawahCast — discover Islamic lectures, recitations, podcasts, and videos curated for you.",
+    url: ROUTES.home,
+    images: [
+      {
+        url: OG_FALLBACK_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: "DawahCast — Islamic lectures, recitations & podcasts",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DawahCast — Islamic lectures, recitations & podcasts",
+    description:
+      "Welcome to DawahCast — discover Islamic lectures, recitations, podcasts, and videos curated for you.",
+    images: [OG_FALLBACK_IMAGE],
+  },
 };
 
 export default function DawahcastHomePage() {

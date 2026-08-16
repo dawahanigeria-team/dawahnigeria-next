@@ -13,6 +13,7 @@ import { AlbumActions } from "@/features/dawahcast/components/audio-detail/Album
 import { getUserPlaylists } from "@/features/library/server";
 import { CommentSection } from "@/features/comments/CommentSection";
 import { ROUTES } from "@/lib/routes";
+import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, durationToIso8601, JsonLd } from "@/lib/JsonLd";
 
@@ -39,14 +40,14 @@ export async function generateMetadata({
       type: "music.album",
       title: album.title,
       description,
-      images: album.image ? [{ url: album.image }] : undefined,
+      images: [{ url: album.image || OG_FALLBACK_IMAGE }],
       url: ROUTES.album(id),
     },
     twitter: {
       card: "summary_large_image",
       title: album.title,
       description,
-      images: album.image ? [album.image] : undefined,
+      images: [album.image || OG_FALLBACK_IMAGE],
     },
   };
 }

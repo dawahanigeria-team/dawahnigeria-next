@@ -16,6 +16,7 @@ import { toPlayerQueue } from "@/features/player/toPlayerTrack";
 import { getUserPlaylists } from "@/features/library/server";
 import { CommentSection } from "@/features/comments/CommentSection";
 import { ROUTES } from "@/lib/routes";
+import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
 
 type Params = { id: string };
 
@@ -42,7 +43,7 @@ export async function generateMetadata({
       type: "music.playlist",
       title: playlist.title,
       description,
-      images: playlist.image ? [{ url: playlist.image }] : undefined,
+      images: [{ url: playlist.image || OG_FALLBACK_IMAGE }],
       url: ROUTES.playlist(id),
     },
   };

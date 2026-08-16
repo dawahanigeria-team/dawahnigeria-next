@@ -22,6 +22,11 @@ import { CommentSection } from "@/features/comments/CommentSection";
 import { formatReleaseDate } from "@/lib/formatLectureDate";
 import type { PlayerTrack } from "@/features/player/types";
 import { ROUTES } from "@/lib/routes";
+import {
+  OG_FALLBACK_IMAGE,
+  lectureShareDescription,
+  isUsableDescription,
+} from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, durationToIso8601, JsonLd } from "@/lib/JsonLd";
 
@@ -37,11 +42,22 @@ export async function generateMetadata({
   const lecture = await getLecture(id);
   if (!lecture) return { title: "Lecture not found" };
 
-  const description =
-    lecture.description ||
-    (lecture.lecturer
-      ? `${lecture.title} by ${lecture.lecturer} on DawahCast.`
-      : `${lecture.title} on DawahCast.`);
+  // The upstream `description` is usually generated file metadata rather than
+  // prose, so it is used only when it actually reads like a summary.
+  const description = isUsableDescription(lecture.description)
+    ? lecture.description
+    : lectureShareDescription({
+        title: lecture.title,
+        lecturer: lecture.lecturer,
+        albumName: lecture.albumName,
+      });
+
+  // Naming the lecturer in the title is what makes a shared link legible in a
+  // WhatsApp list, where the title is often all that is read.
+  const shareTitle = lecture.lecturer
+    ? `${lecture.title} — ${lecture.lecturer}`
+    : lecture.title;
+  const images = [lecture.image || OG_FALLBACK_IMAGE];
 
   return {
     title: lecture.title,
@@ -49,16 +65,17 @@ export async function generateMetadata({
     alternates: { canonical: ROUTES.lecture(id) },
     openGraph: {
       type: "music.song",
-      title: lecture.title,
+      siteName: "DawahCast",
+      title: shareTitle,
       description,
-      images: lecture.image ? [{ url: lecture.image }] : undefined,
+      images,
       url: ROUTES.lecture(id),
     },
     twitter: {
       card: "summary_large_image",
-      title: lecture.title,
+      title: shareTitle,
       description,
-      images: lecture.image ? [lecture.image] : undefined,
+      images,
     },
   };
 }

@@ -12,6 +12,7 @@ import { env } from "@/lib/env";
 import { ThemeScript } from "@/features/dawahcast/components/site-shell/ThemeScript";
 import { AnalyticsProvider } from "@/features/analytics/AnalyticsProvider";
 import { PlayerProvider } from "@/features/player/PlayerProvider";
+import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
 import { WebVitals } from "@/features/analytics/WebVitals";
 import "./globals.css";
 
@@ -82,10 +83,24 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "DawahCast",
-    url: env.siteUrl,
+    // Deliberately no `url`: every page that does not declare its own
+    // `openGraph` inherits this block verbatim, and a hardcoded site root made
+    // each listing page claim og:url = the homepage. Facebook then attributed
+    // the share to the homepage instead of the shared page. With it absent,
+    // crawlers use the URL actually shared, and `alternates.canonical` on each
+    // page still emits the canonical link.
+    images: [
+      {
+        url: OG_FALLBACK_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: "DawahCast — Islamic lectures, recitations & podcasts",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
+    images: [OG_FALLBACK_IMAGE],
   },
 };
 

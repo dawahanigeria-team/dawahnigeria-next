@@ -7,6 +7,7 @@ import {
 } from "@/features/dawahcast/server/category";
 import { LectureCard } from "@/features/dawahcast/components/LectureCard";
 import { ROUTES } from "@/lib/routes";
+import { OG_FALLBACK_IMAGE } from "@/lib/socialMeta";
 
 type Params = { id: string };
 
@@ -28,7 +29,7 @@ export async function generateMetadata({
       type: "website",
       title: category.name,
       description,
-      images: category.image ? [{ url: category.image }] : undefined,
+      images: [{ url: category.image || OG_FALLBACK_IMAGE }],
       url: ROUTES.category(id),
     },
   };
