@@ -6,10 +6,14 @@ import { env } from "@/lib/env";
 const INDEXABLE_HOSTS = new Set(["dawahnigeria.com", "www.dawahnigeria.com"]);
 
 /**
- * Decided per host rather than per build, because one bundle is served from
- * beta.dawahnigeria.com and the workers.dev URL as well as production. Letting a
- * preview host be crawled would put a second copy of the whole catalogue into
- * the index, competing with the real site for its own pages.
+ * Decided per host rather than per build, because the same bundle is served
+ * from the workers.dev URL as well as production. Letting a preview host be
+ * crawled would put a second copy of the whole catalogue into the index,
+ * competing with the real site for its own pages.
+ *
+ * beta.dawahnigeria.com used to be the other such host; it was retired when the
+ * app went live on the apex. Keep this host-gated rather than hardcoding a
+ * single allow — any future preview domain is covered without a code change.
  *
  * Reading the host makes this route dynamic, which for a robots.txt costs
  * nothing worth measuring.

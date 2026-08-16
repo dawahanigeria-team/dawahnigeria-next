@@ -18,8 +18,13 @@
 
   // Serve the production apex and www host from this Worker. The custom Worker
   // permanently redirects www to the apex so crawlers see one canonical host.
-  // Keep beta available for smoke tests; robots.ts blocks it from indexing.
   // `custom_domain` makes Wrangler create and manage the DNS records.
+  //
+  // beta.dawahnigeria.com was removed once the app went live on the apex — it
+  // existed only as the staging host during the CRA migration. `workers_dev`
+  // below is the remaining pre-DNS smoke-test URL, and unlike beta it is not on
+  // the public domain, so there is no second copy of the catalogue to keep out
+  // of the index.
   "routes": [
     {
       "pattern": "dawahnigeria.com",
@@ -27,10 +32,6 @@
     },
     {
       "pattern": "www.dawahnigeria.com",
-      "custom_domain": true
-    },
-    {
-      "pattern": "beta.dawahnigeria.com",
       "custom_domain": true
     }
   ],
