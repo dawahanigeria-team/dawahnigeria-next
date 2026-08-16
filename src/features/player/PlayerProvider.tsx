@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { usePlayer } from "./store";
 import { PlayerBar } from "./PlayerBar";
 import { BottomNav } from "@/features/dawahcast/components/site-shell/BottomNav";
@@ -46,11 +47,20 @@ function forAnalytics(track: PlayerTrack) {
  *   sleep timer expires  → store.setPlaying(false)
  *   navigator.mediaSession actions → forward to store
  *
- * The provider is mounted once in the dawahcast layout so the audio element
- * survives client-side navigation.
+ * Mounted once in the ROOT layout, not the dawahcast layout. A nested layout is
+ * only preserved while navigating inside its own segment, so hosting the
+ * <audio> there tore it down — and stopped playback — on any route outside
+ * /dawahcast. At the root there is no layout boundary left that can unmount it.
+ *
+ * The bottom chrome still belongs to the app shell only: BottomNav is the
+ * dawahcast tab bar and has no meaning on the auth pages, so it is gated on the
+ * pathname while the audio element itself stays mounted everywhere. Audio keeps
+ * playing while signing in; only the controls are hidden.
  */
 export function PlayerProvider({ children }: { children: React.ReactNode }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const pathname = usePathname();
+  const showChrome = pathname?.startsWith("/dawahcast") ?? false;
   // Swapping `src` on a playing element makes it emit `pause`. That is the
   // browser loading, not the user pausing, so the handler must ignore exactly
   // one such event or the store flips to paused and the new track never starts.
@@ -222,11 +232,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
         }}
       />
       {/* CRA .layout_buttom_menue — fixed, z-90, holds the player row above the
-          four-tab bar. Shown at every width, as the live site does. */}
-      <div className="fixed inset-x-0 bottom-0 z-[90] flex w-full flex-col bg-background">
-        <PlayerBar audioRef={audioRef} />
-        <BottomNav />
-      </div>
+          four-tab bar. Shown at every width, as the live site does. App shell
+          only: the <audio> above stays mounted on every route, but BottomNav is
+          dawahcast navigation and would be meaningless on the auth pages. */}
+      {showChrome && (
+        <div className="fixed inset-x-0 bottom-0 z-[90] flex w-full flex-col bg-background">
+          <PlayerBar audioRef={audioRef} />
+          <BottomNav />
+        </div>
+      )}
     </>
   );
 }

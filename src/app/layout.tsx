@@ -11,6 +11,7 @@ import {
 import { env } from "@/lib/env";
 import { ThemeScript } from "@/features/dawahcast/components/site-shell/ThemeScript";
 import { AnalyticsProvider } from "@/features/analytics/AnalyticsProvider";
+import { PlayerProvider } from "@/features/player/PlayerProvider";
 import { WebVitals } from "@/features/analytics/WebVitals";
 import "./globals.css";
 
@@ -103,7 +104,10 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body className="min-h-screen font-sans antialiased">
-        {children}
+        {/* Hosts the single <audio> element. It lives at the root, not in the
+            dawahcast layout, so that no route change can unmount it and stop
+            playback. The player's own chrome stays scoped to the app shell. */}
+        <PlayerProvider>{children}</PlayerProvider>
         {/* Client-only; renders nothing. Covers auth pages as well as the app. */}
         <AnalyticsProvider />
         <WebVitals />
