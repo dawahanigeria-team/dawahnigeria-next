@@ -7,11 +7,13 @@ import { getSession } from "@/features/auth/session";
 import { getUserPlaylists } from "@/features/library/server";
 import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
+import { CollectionJsonLd } from "@/lib/CollectionJsonLd";
+import { resolveLecture } from "@/features/dawahcast/lectureFields";
 
 const PAGE_SIZE = 10;
 
 export const metadata: Metadata = {
-  title: "New Releases — Dawah Nigeria | Fresh Islamic Content",
+  title: "New Islamic Lecture Releases",
   description: "The latest lectures added to DawahCast.",
   alternates: { canonical: ROUTES.new },
 };
@@ -35,6 +37,18 @@ export default async function NewPage({
     // This page runs its own editorial palette rather than the app theme —
     // matching the live site, which scopes those CSS variables to `/new`.
     <div className="flex w-full flex-col bg-[#0f1117] px-[3%] pb-16 pt-8">
+      <CollectionJsonLd
+        name="New Islamic Lecture Releases"
+        description="The most recently published Islamic lectures on DawahCast."
+        path={ROUTES.new}
+        items={lectures.map((lecture) => {
+          // Rows arrive raw from the catalogue API — `title`/`image` only exist
+          // after `resolveLecture` maps mp3_title/mp3_thumbnail across, which is
+          // the same normaliser the visible table uses.
+          const l = resolveLecture(lecture);
+          return { name: l.title, path: ROUTES.lecture(l.id), image: l.image };
+        })}
+      />
       <PageHeaderRouter title="New" />
       <section className="mb-10 border-b border-[rgba(212,165,116,0.15)] pb-8">
         <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(212,165,116,0.15)] bg-[rgba(212,165,116,0.1)] px-3.5 py-1.5">

@@ -4,6 +4,7 @@ import { FiEye } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
 import { formatNumber } from "@/lib/formatNumber";
 import type { LectureSummary } from "../server/landing";
+import { resolveAlbum } from "../lectureFields";
 
 /**
  * Album tile used by Recitations (and any album listing).
@@ -15,16 +16,7 @@ import type { LectureSummary } from "../server/landing";
  */
 export function AlbumCard({ album }: { album: LectureSummary }) {
   const raw = album as unknown as Record<string, unknown>;
-  const id = String(album.nid ?? album.id ?? "");
-  const title =
-    (raw.name as string | undefined) ||
-    (raw.album_name as string | undefined) ||
-    album.title ||
-    "Untitled";
-  const image =
-    (raw.alb_thumbnail as string | undefined) ||
-    (raw.img as string | undefined) ||
-    album.image;
+  const { id, title, image } = resolveAlbum(album);
   const views = Number(raw.views ?? 0) || 0;
 
   return (

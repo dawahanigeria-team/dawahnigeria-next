@@ -32,6 +32,27 @@ function str(raw: Record<string, unknown>, ...keys: string[]): string | undefine
   return undefined;
 }
 
+export type ResolvedAlbum = { id: string; title: string; image?: string };
+
+/**
+ * Album rows need their own key resolution: on these shapes `name` is the album
+ * title, whereas on lecture shapes `name` is the *lecturer* — so
+ * `resolveLecture` cannot be reused here.
+ *
+ * Extracted from `AlbumCard`, which had this inline. Keeping one copy is what
+ * stops the visible grid and the structured data from disagreeing about an
+ * album's title, which is exactly how /dawahcast/recitations ended up rendering
+ * album names on screen while emitting an empty ItemList.
+ */
+export function resolveAlbum(album: LectureSummary): ResolvedAlbum {
+  const raw = album as unknown as Record<string, unknown>;
+  return {
+    id: String(album.nid ?? album.id ?? ""),
+    title: str(raw, "name", "album_name", "title") ?? "Untitled",
+    image: str(raw, "alb_thumbnail", "img", "image"),
+  };
+}
+
 function num(raw: Record<string, unknown>, ...keys: string[]): number {
   for (const key of keys) {
     const v = raw[key];

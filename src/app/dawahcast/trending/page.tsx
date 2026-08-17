@@ -5,11 +5,13 @@ import { getSession } from "@/features/auth/session";
 import { getUserPlaylists } from "@/features/library/server";
 import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
+import { CollectionJsonLd } from "@/lib/CollectionJsonLd";
+import { resolveLecture } from "@/features/dawahcast/lectureFields";
 
 const TOP_TRENDING_COUNT = 3;
 
 export const metadata: Metadata = {
-  title: "Trending resources on Dawah Nigeria - Home of islamic contents",
+  title: "Trending Islamic Lectures",
   description:
     "The most listened-to lectures on Dawah Nigeria right now.",
   alternates: { canonical: ROUTES.trending },
@@ -29,6 +31,18 @@ export default async function TrendingPage() {
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
       <h1 className="sr-only">Trending</h1>
+      <CollectionJsonLd
+        name="Trending Islamic Lectures"
+        description="The most listened-to Islamic lectures on DawahCast right now."
+        path={ROUTES.trending}
+        items={lectures.map((lecture) => {
+          // Rows arrive raw from the catalogue API — `title`/`image` only exist
+          // after `resolveLecture` maps mp3_title/mp3_thumbnail across, which is
+          // the same normaliser the visible table uses.
+          const l = resolveLecture(lecture);
+          return { name: l.title, path: ROUTES.lecture(l.id), image: l.image };
+        })}
+      />
       <PageHeaderRouter title="Trending" />
 
       <TrendingList
