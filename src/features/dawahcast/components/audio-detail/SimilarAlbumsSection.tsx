@@ -1,5 +1,5 @@
 import { getSimilarAlbums } from "../../server/audioDetail";
-import { LectureRow } from "../LectureRow";
+import { AlbumRow } from "../AlbumRow";
 
 type Props = {
   lecturerId: string | number;
@@ -11,9 +11,9 @@ export async function SimilarAlbumsSection({ lecturerId, lecturerName }: Props) 
   if (!albums?.length) return null;
 
   return (
-    <LectureRow
+    <AlbumRow
       heading={lecturerName ? `More albums by ${lecturerName}` : "Similar albums"}
-      lectures={albums}
+      albums={albums}
     />
   );
 }

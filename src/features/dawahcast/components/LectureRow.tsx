@@ -1,6 +1,5 @@
-import Link from "next/link";
-import { FiChevronsRight } from "react-icons/fi";
 import { LectureCard } from "./LectureCard";
+import { RowHeading } from "./RowHeading";
 import { ScrollRow } from "./ScrollRow";
 import { lectureQueue } from "@/features/player/toPlayerTrack";
 import type { LectureSummary } from "../server/landing";
@@ -24,23 +23,7 @@ export function LectureRow({ heading, lectures, moreHref, limit = 10 }: Props) {
 
   return (
     <section className="my-4 sm:my-6">
-      {/* CRA .groupWidget_top: 2% side padding, 22px/600 heading dropping to
-          20px under 900px, and a "more" button with a double chevron. */}
-      <div className="mb-2 flex items-center justify-between px-[2%] mobile:mb-0 mobile:px-0">
-        <h2 className="text-[22px] font-semibold leading-[42px] text-color-primary mid:text-[20px]">
-          {heading}
-        </h2>
-        {moreHref && (
-          <Link
-            href={moreHref}
-            className="flex items-center rounded text-[15px] text-color-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dncolor-500 dark:text-dncolor-500"
-            aria-label={`View more ${heading}`}
-          >
-            <span>more</span>
-            <FiChevronsRight className="pt-1 text-[20px]" aria-hidden />
-          </Link>
-        )}
-      </div>
+      <RowHeading heading={heading} moreHref={moreHref} />
       <ScrollRow>
         {items.map((lecture, i) => (
           <li
