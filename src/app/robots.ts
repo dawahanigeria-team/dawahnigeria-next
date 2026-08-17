@@ -22,10 +22,26 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   const host = (await headers()).get("host")?.toLowerCase().split(":")[0] ?? "";
   const indexable = INDEXABLE_HOSTS.has(host);
 
+  // Per-visitor and transactional surfaces. They render nothing a crawler can
+  // use (signed-out they are empty shells) and spending crawl budget on them
+  // comes straight out of the catalogue's share.
+  const PRIVATE_PATHS = [
+    "/dawahcast/account",
+    "/dawahcast/library",
+    "/dawahcast/favourite",
+    "/dawahcast/myplaylist",
+    "/dawahcast/download",
+    "/dawahcast/search",
+    "/dawahcast/subscription/",
+    "/dawahcast/more/recently-viewed",
+    "/auth/",
+    "/api/",
+  ];
+
   return {
     rules: [
       indexable
-        ? { userAgent: "*", allow: "/" }
+        ? { userAgent: "*", allow: "/", disallow: PRIVATE_PATHS }
         : { userAgent: "*", disallow: "/" },
     ],
     // Always the canonical site's sitemap — a preview host should never
