@@ -22,11 +22,13 @@ import { CommentSection } from "@/features/comments/CommentSection";
 import { formatReleaseDate } from "@/lib/formatLectureDate";
 import type { PlayerTrack } from "@/features/player/types";
 import { ROUTES } from "@/lib/routes";
+import { ShareLinks } from "@/lib/ShareLinks";
 import {
   OG_FALLBACK_IMAGE,
   socialImageUrl,
   lectureShareDescription,
   isUsableDescription,
+  seoTitle,
 } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, durationToIso8601, JsonLd } from "@/lib/JsonLd";
@@ -61,7 +63,9 @@ export async function generateMetadata({
   const images = [socialImageUrl(lecture.image) || OG_FALLBACK_IMAGE];
 
   return {
-    title: lecture.title,
+    // `shareTitle` below stays full-length on purpose — a WhatsApp card has room
+    // for it. The SERP title does not, so it gets the trimmed form.
+    title: seoTitle(lecture.title, lecture.lecturer),
     description,
     alternates: { canonical: ROUTES.lecture(id) },
     openGraph: {
@@ -115,6 +119,7 @@ export default async function LectureDetailPage({
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <ShareLinks path={ROUTES.lecture(id)} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -186,7 +191,7 @@ export default async function LectureDetailPage({
                 <Link
                   href={`/auth/login?next=${encodeURIComponent(ROUTES.lecture(id))}`}
                   aria-label={`Sign in to like ${lecture.title}`}
-                  className="flex items-center"
+                  className="flex min-h-11 min-w-11 items-center justify-center"
                 >
                   <MdFavoriteBorder className="h-4 w-4" aria-hidden />
                 </Link>
@@ -204,7 +209,11 @@ export default async function LectureDetailPage({
             </LabelledAction>
 
             <LabelledAction label="Comment" count={lecture.comment}>
-              <a href="#comments" aria-label="Jump to comments" className="flex items-center">
+              <a
+                href="#comments"
+                aria-label="Jump to comments"
+                className="flex min-h-11 min-w-11 items-center justify-center"
+              >
                 <BiMessageRounded className="h-4 w-4" aria-hidden />
               </a>
             </LabelledAction>

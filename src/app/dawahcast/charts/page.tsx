@@ -12,7 +12,7 @@ import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const metadata: Metadata = {
-  title: "Charts - Get islamic resources on Dawah Nigeria",
+  title: "Top Islamic Lecture Charts",
   description: "Top lectures, albums, lecturers, and playlists on Dawah Nigeria.",
   alternates: { canonical: ROUTES.charts },
 };

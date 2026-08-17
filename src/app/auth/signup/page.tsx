@@ -5,7 +5,7 @@ import { getSession } from "@/features/auth/session";
 import { getLanguages } from "@/features/dawahcast/server/languages";
 
 export const metadata: Metadata = {
-  title: "Sign up on Dawah Nigeria | Home of Islamic resources",
+  title: "Create your account",
   description: "Join DawahCast.",
   robots: { index: false },
 };

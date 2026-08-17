@@ -48,6 +48,55 @@ export function lectureShareDescription({
   return `Listen to ${title}${by}${from} on DawahCast — Islamic lectures, recitations and podcasts.`;
 }
 
+/**
+ * Budget for the `<title>` text a page supplies, in characters.
+ *
+ * The root layout appends " · DawahCast" (12 chars) via its title template, and
+ * Google truncates the whole string around 60 — so anything past this is spent
+ * rendering an ellipsis in the result. Catalogue titles arrive far longer than
+ * that: upstream lecture names run past 110 characters on their own.
+ */
+const TITLE_BUDGET = 48;
+
+/**
+ * Trim a catalogue title down to something a search result can actually show.
+ *
+ * Upstream lecture names usually already end with the lecturer — "…Kafin
+ * Mutuwar (07-08-26) (Hausa) - Shaykh Musa Yusuf Assadussunnah (Hausa)" — and
+ * the page then had the same name a second time in `og:title`. Dropping the
+ * duplicated tail first means the truncation that follows spends its budget on
+ * the part of the title that identifies the lecture.
+ *
+ * Cuts on a word boundary; a mid-word cut reads like a broken string rather
+ * than an abbreviation.
+ */
+export function seoTitle(
+  title: string,
+  lecturer?: string,
+  budget = TITLE_BUDGET,
+): string {
+  let text = title.replace(/\s+/g, " ").trim();
+
+  if (lecturer) {
+    const name = lecturer.replace(/\s+/g, " ").trim();
+    // " - Shaykh X" / " — Shaykh X", optionally followed by a parenthetical
+    // language tag the upstream repeats: "(Hausa)".
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    text = text
+      .replace(new RegExp(`\\s*[-—–]\\s*${escaped}\\s*(\\([^)]*\\))?\\s*$`, "i"), "")
+      .trim();
+  }
+
+  if (text.length <= budget) return text;
+
+  const clipped = text.slice(0, budget);
+  const lastSpace = clipped.lastIndexOf(" ");
+  // Only honour the word boundary when it isn't throwing away most of the
+  // budget — a single very long token should still be cut.
+  const cut = lastSpace > budget * 0.6 ? clipped.slice(0, lastSpace) : clipped;
+  return `${cut.replace(/[\s,;:–—-]+$/, "")}…`;
+}
+
 /** True when the upstream description is real prose rather than file metadata. */
 export function isUsableDescription(value: string | undefined): value is string {
   if (!value) return false;
