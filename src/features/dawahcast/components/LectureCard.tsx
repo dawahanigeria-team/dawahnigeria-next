@@ -2,6 +2,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { FiEye } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
+import { PlayButton } from "@/features/player/PlayButton";
+import { lectureToPlayerTrack } from "@/features/player/toPlayerTrack";
+import type { PlayerTrack } from "@/features/player/types";
 import type { LectureSummary } from "../server/landing";
 
 function formatViews(n: string | number | undefined): string {
@@ -13,7 +16,14 @@ function formatViews(n: string | number | undefined): string {
   return String(num);
 }
 
-export function LectureCard({ lecture }: { lecture: LectureSummary }) {
+export function LectureCard({
+  lecture,
+  queue,
+}: {
+  lecture: LectureSummary;
+  /** The rest of the row, so playing a card keeps going instead of stopping. */
+  queue?: PlayerTrack[];
+}) {
   const raw = lecture as Record<string, unknown>;
   const id = lecture.nid ?? lecture.id;
   // The upstream PHP endpoints use a mix of field names (mp3_title vs Title vs
@@ -37,16 +47,20 @@ export function LectureCard({ lecture }: { lecture: LectureSummary }) {
     (raw.lec_img as string | undefined);
   const views = formatViews(lecture.views);
 
+  // Null when the record has no usable audio, so a card whose file is missing
+  // shows no control rather than one that can only fail.
+  const playerTrack = lectureToPlayerTrack(lecture);
+
   return (
-    <Link
-      href={ROUTES.lecture(id)}
-      className="group flex w-full flex-col gap-2"
-    >
+    // The card is one link, not two. The title's `after:` pseudo-element is
+    // stretched over the whole card to make it clickable, which keeps the play
+    // control a real sibling button rather than a <button> nested in an <a>.
+    <div className="group relative flex w-full flex-col gap-2">
       <div className="relative aspect-square w-full overflow-hidden rounded-md bg-muted">
         {img ? (
           <Image
             src={img}
-            alt={title}
+            alt=""
             fill
             sizes="(min-width: 1280px) 20vw, (min-width: 640px) 30vw, 45vw"
             className="object-cover transition-transform group-hover:scale-105"
@@ -59,17 +73,27 @@ export function LectureCard({ lecture }: { lecture: LectureSummary }) {
             <span>{views}</span>
           </div>
         )}
+        {playerTrack && (
+          // Always visible below 615px — a touch screen has no hover, so a
+          // hover-only control would be unreachable for most of the audience.
+          <div className="absolute bottom-2 right-2 z-10 opacity-100 transition-opacity mobile-up:opacity-0 mobile-up:group-hover:opacity-100 mobile-up:group-focus-within:opacity-100">
+            <PlayButton track={playerTrack} queue={queue} variant="round" />
+          </div>
+        )}
       </div>
       <div className="px-0.5">
-        <p className="line-clamp-2 text-xs font-medium text-foreground sm:text-sm">
+        <Link
+          href={ROUTES.lecture(id)}
+          className="line-clamp-2 text-xs font-medium text-foreground after:absolute after:inset-0 sm:text-sm"
+        >
           {title}
-        </p>
+        </Link>
         {lecturer && (
           <p className="line-clamp-1 text-[11px] text-muted-foreground sm:text-xs">
             {lecturer}
           </p>
         )}
       </div>
-    </Link>
+    </div>
   );
 }

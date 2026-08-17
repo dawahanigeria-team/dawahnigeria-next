@@ -2,6 +2,7 @@ import Link from "next/link";
 import { FiChevronsRight } from "react-icons/fi";
 import { LectureCard } from "./LectureCard";
 import { ScrollRow } from "./ScrollRow";
+import { lectureQueue } from "@/features/player/toPlayerTrack";
 import type { LectureSummary } from "../server/landing";
 
 type Props = {
@@ -16,6 +17,10 @@ type Props = {
 export function LectureRow({ heading, lectures, moreHref, limit = 10 }: Props) {
   if (!lectures.length) return null;
   const items = lectures.slice(0, limit);
+  // Built from the rendered slice, so pressing play on a card continues through
+  // the rest of the row rather than stopping after one lecture. Unplayable
+  // records are dropped by lectureQueue, so the queue never contains a dead end.
+  const queue = lectureQueue(items);
 
   return (
     <section className="my-4 sm:my-6">
@@ -42,7 +47,7 @@ export function LectureRow({ heading, lectures, moreHref, limit = 10 }: Props) {
             key={`${lecture.nid ?? lecture.id}-${i}`}
             className="w-[160px] shrink-0 sm:w-[190px]"
           >
-            <LectureCard lecture={lecture} />
+            <LectureCard lecture={lecture} queue={queue} />
           </li>
         ))}
       </ScrollRow>
