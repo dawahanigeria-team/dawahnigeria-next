@@ -16,7 +16,10 @@ import { toPlayerQueue } from "@/features/player/toPlayerTrack";
 import { getUserPlaylists } from "@/features/library/server";
 import { CommentSection } from "@/features/comments/CommentSection";
 import { ROUTES } from "@/lib/routes";
+import { ShareLinks } from "@/lib/ShareLinks";
 import { OG_FALLBACK_IMAGE, socialImageUrl } from "@/lib/socialMeta";
+import { env } from "@/lib/env";
+import { absoluteUrl, durationToIso8601, JsonLd } from "@/lib/JsonLd";
 
 type Params = { id: string };
 
@@ -29,11 +32,22 @@ export async function generateMetadata({
   const playlist = await getPlaylist(id);
   if (!playlist) return { title: "Playlist not found" };
 
+  // Playlists are over half the sitemap, and almost none of them carry an
+  // upstream description or owner — so the old fallback shipped the identical
+  // string "A DawahCast playlist." on hundreds of URLs, which reads to a crawler
+  // as one page duplicated. Derive something specific from what we always have:
+  // the title and the track count.
+  const trackCount = playlist.lectureIds
+    .split(",")
+    .filter((nid) => nid.trim().length > 0).length;
+  const countPhrase = trackCount
+    ? `${trackCount} ${trackCount === 1 ? "lecture" : "lectures"}`
+    : "Islamic lectures";
   const description =
     playlist.description ??
     (playlist.owner
-      ? `Playlist by ${playlist.owner} on DawahCast.`
-      : "A DawahCast playlist.");
+      ? `${playlist.title} — ${countPhrase} curated by ${playlist.owner} on DawahCast.`
+      : `${playlist.title} — ${countPhrase} on DawahCast. Listen free.`);
 
   return {
     title: playlist.title,
@@ -70,8 +84,34 @@ export default async function PlaylistDetailPage({
       ])
     : [undefined, undefined, undefined];
 
+  const canonicalUrl = absoluteUrl(env.siteUrl, ROUTES.playlist(id));
+
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <ShareLinks path={ROUTES.playlist(id)} />
+      {/* Mirrors the album page's graph so a playlist is described as a real
+          collection of tracks rather than an untyped page. `track` doubles as
+          the internal-link surface that lets a crawler reach lecture pages the
+          sitemap has not enumerated yet. */}
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "MusicPlaylist",
+          name: playlist.title,
+          url: canonicalUrl,
+          image: playlist.image,
+          description: playlist.description,
+          numTracks: lectures.length,
+          track: lectures.map((track, index) => ({
+            "@type": "MusicRecording",
+            position: index + 1,
+            name: track.mp3_title || track.Title || track.title,
+            url: absoluteUrl(env.siteUrl, ROUTES.lecture(track.nid ?? track.id)),
+            contentUrl: track.mp3_url || track.audio,
+            duration: durationToIso8601(track.mp3_duration || track.duration),
+          })),
+        }}
+      />
       {/* Breadcrumb — live renders "Back/ <name>" */}
       <div className="mb-5 flex items-center gap-2 text-sm">
         <BackLink variant="inline" />

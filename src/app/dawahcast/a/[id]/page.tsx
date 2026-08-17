@@ -13,6 +13,7 @@ import { AlbumActions } from "@/features/dawahcast/components/audio-detail/Album
 import { getUserPlaylists } from "@/features/library/server";
 import { CommentSection } from "@/features/comments/CommentSection";
 import { ROUTES } from "@/lib/routes";
+import { ShareLinks } from "@/lib/ShareLinks";
 import { OG_FALLBACK_IMAGE, socialImageUrl } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, durationToIso8601, JsonLd } from "@/lib/JsonLd";
@@ -85,6 +86,7 @@ export default async function AlbumDetailPage({
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <ShareLinks path={ROUTES.album(id)} />
       <JsonLd
         data={{
           "@context": "https://schema.org",

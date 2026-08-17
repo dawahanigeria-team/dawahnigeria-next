@@ -35,12 +35,15 @@ export function SearchBar() {
           onChange={(e) => setValue(e.target.value)}
           placeholder="Search lectures, lecturers..."
           aria-label="Search DawahCast"
-          className="min-w-0 flex-auto border-none bg-transparent text-[15px] leading-[28px] text-black outline-none placeholder:text-[14px] placeholder:leading-[28px] placeholder:text-[#6b6b6b] [&::-webkit-search-cancel-button]:hidden"
+          // 38px + the pill's 3px of vertical padding on each side puts the whole
+          // search control at 44px, the minimum comfortable touch height. The
+          // 28px line-height is kept so the text sits where it always did.
+          className="min-h-[38px] min-w-0 flex-auto border-none bg-transparent text-[15px] leading-[28px] text-black outline-none placeholder:text-[14px] placeholder:leading-[28px] placeholder:text-[#6b6b6b] [&::-webkit-search-cancel-button]:hidden"
         />
         <button
           type="submit"
           disabled={!value.trim()}
-          className="ml-1 inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-[20px] border-0 bg-[#ddff2b] px-[14px] py-1.5 text-[13px] font-semibold text-black transition-opacity duration-150 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 tab:px-2"
+          className="ml-1 inline-flex min-h-[38px] shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] border-0 bg-[#ddff2b] px-[14px] py-1.5 text-[13px] font-semibold text-black transition-opacity duration-150 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 tab:min-w-[38px] tab:px-2"
         >
           <FiSearch className="hidden text-[16px] tab:inline" aria-hidden />
           <span className="inline tab:hidden">Search</span>
