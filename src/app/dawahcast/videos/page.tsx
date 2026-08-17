@@ -5,7 +5,7 @@ import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 
 export const metadata: Metadata = {
-  title: "Videos - Get islamic resources on Dawah Nigeria",
+  title: "Islamic Video Lectures",
   description: "Watch lecture videos on DawahCast.",
   alternates: { canonical: ROUTES.videos },
 };

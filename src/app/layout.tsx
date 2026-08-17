@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Nunito_Sans,
   Manrope,
@@ -103,6 +103,22 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     images: [OG_FALLBACK_IMAGE],
   },
+  // Renders the iOS Smart App Banner. The native app already claims
+  // `applinks:dawahnigeria.com`, so a visitor who has it installed gets a real
+  // "Open" rather than a trip through the App Store.
+  itunes: { appId: "6759193375" },
+};
+
+/**
+ * `theme_color` in the manifest only covers the installed app; this is what
+ * tints the browser chrome on a normal visit. Two entries so the bar follows the
+ * theme the user actually picked rather than being pinned to the dark shell.
+ */
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#030303" },
+  ],
 };
 
 export default function RootLayout({

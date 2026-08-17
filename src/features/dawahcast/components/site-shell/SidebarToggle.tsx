@@ -15,7 +15,10 @@ export function SidebarToggle() {
       type="button"
       onClick={openDrawer}
       aria-label="Open navigation"
-      className="hidden cursor-pointer text-[2rem] leading-none text-color tab:block"
+      // The glyph stays 2rem; the button grows to a 44px square around it so the
+      // drawer toggle is reachable by thumb. `-ml-1.5` cancels the 6px the wider
+      // box would otherwise add on the left, keeping the icon where it was.
+      className="hidden cursor-pointer text-[2rem] leading-none text-color tab:-ml-1.5 tab:grid tab:h-11 tab:w-11 tab:place-items-center"
     >
       <FiMenu aria-hidden />
     </button>

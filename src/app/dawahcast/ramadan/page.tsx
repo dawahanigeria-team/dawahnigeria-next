@@ -8,7 +8,7 @@ import { ROUTES } from "@/lib/routes";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Ramadan lectures on Dawah Nigeria - Home of Islamic resources",
+  title: "Ramadan Lectures by Year",
   description: "Ramadan lecture archives by year on DawahCast.",
   alternates: { canonical: ROUTES.ramadan },
 };

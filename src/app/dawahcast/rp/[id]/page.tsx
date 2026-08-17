@@ -19,7 +19,8 @@ import { FavoriteButton } from "@/features/favorites/FavoriteButton";
 import { CommentSection } from "@/features/comments/CommentSection";
 import type { PlaylistListItem } from "@/features/dawahcast/server/listings";
 import { ROUTES } from "@/lib/routes";
-import { OG_FALLBACK_IMAGE, socialImageUrl } from "@/lib/socialMeta";
+import { ShareLinks } from "@/lib/ShareLinks";
+import { OG_FALLBACK_IMAGE, socialImageUrl, seoTitle } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, JsonLd } from "@/lib/JsonLd";
 
@@ -38,7 +39,11 @@ export async function generateMetadata({
     lecturer.bio?.slice(0, 200) ?? `Lectures by ${lecturer.name} on DawahCast.`;
 
   return {
-    title: `${lecturer.name} on Dawah Nigeria - Home of islamic resources`,
+    // Was "<name> on Dawah Nigeria - Home of islamic resources", which with the
+    // " · DawahCast" template ran past 100 characters — the tail Google cuts is
+    // pure boilerplate, and it repeated the brand twice. Lead with the query
+    // people actually type: the scholar's name.
+    title: seoTitle(`Lectures by ${lecturer.name}`),
     description,
     alternates: { canonical: ROUTES.resourcePerson(id) },
     openGraph: {
@@ -96,6 +101,7 @@ export default async function LecturerPage({
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
+      <ShareLinks path={ROUTES.resourcePerson(id)} />
       <JsonLd
         data={{
           "@context": "https://schema.org",
@@ -151,7 +157,7 @@ export default async function LecturerPage({
                 <Link
                   href={`/auth/login?next=${encodeURIComponent(ROUTES.resourcePerson(id))}`}
                   aria-label={`Sign in to like ${lecturer.name}`}
-                  className="flex items-center"
+                  className="flex min-h-11 min-w-11 items-center justify-center"
                 >
                   <MdFavoriteBorder className="h-4 w-4" aria-hidden />
                 </Link>
@@ -171,7 +177,7 @@ export default async function LecturerPage({
               <a
                 href="#comments"
                 aria-label="Jump to comments"
-                className="flex items-center"
+                className="flex min-h-11 min-w-11 items-center justify-center"
               >
                 <MdChatBubbleOutline className="h-4 w-4" aria-hidden />
               </a>

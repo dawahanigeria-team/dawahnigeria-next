@@ -58,7 +58,12 @@ export function injectTawkScript({
   script.async = true;
   script.src = src;
   script.charset = "UTF-8";
-  script.setAttribute("crossorigin", "*");
+  // No `crossorigin`: "*" is not one of its three legal values ("",
+  // "anonymous", "use-credentials"), and an invalid value is coerced to
+  // "anonymous" — which puts this classic script into CORS mode and makes it
+  // fail outright whenever Tawk's CDN answers without `Access-Control-Allow-
+  // Origin`. A classic <script> needs no CORS handshake, so requesting one only
+  // adds a failure mode.
 
   const firstScript = document.getElementsByTagName("script")[0];
   if (firstScript?.parentNode) {

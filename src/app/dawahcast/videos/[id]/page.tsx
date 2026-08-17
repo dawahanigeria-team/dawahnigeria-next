@@ -107,7 +107,11 @@ export default async function VideoPage({
                 />
               </LabelledAction>
               <LabelledAction label="Comment">
-                <a href="#comments" aria-label="Jump to comments" className="flex items-center">
+                <a
+                  href="#comments"
+                  aria-label="Jump to comments"
+                  className="flex min-h-11 min-w-11 items-center justify-center"
+                >
                   <MdChatBubbleOutline className="h-4 w-4" aria-hidden />
                 </a>
               </LabelledAction>

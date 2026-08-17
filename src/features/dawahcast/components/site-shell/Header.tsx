@@ -32,7 +32,10 @@ export function Header() {
           <Link
             href={ROUTES.home}
             aria-label="DawahCast home"
-            className="block h-[35px] w-[35px] cursor-pointer mobile:h-[30px] mobile:w-[30px]"
+            // The logo box keeps CRA's 35/30px sizing; the ::before overlay adds
+            // a centred 44px touch target on top of it without changing layout,
+            // which a padded box would.
+            className="relative block h-[35px] w-[35px] cursor-pointer before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] mobile:h-[30px] mobile:w-[30px]"
           >
             {/* CRA sizes this box 35×35 and stretches the 79×59 source to fill
                 it. Matched deliberately for visual parity with the live site. */}

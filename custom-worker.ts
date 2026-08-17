@@ -18,6 +18,12 @@ import {
   USER_COOKIE,
   refreshUpstream,
 } from "./src/features/auth/refresh";
+import {
+  cachePolicyFor,
+  isCacheableRequest,
+  readCache,
+  writeCache,
+} from "./src/lib/htmlCache";
 
 // Mirrors the matcher `src/proxy.ts` used: skip Next internals, static assets,
 // metadata files, and the auth pages themselves (they run before login
@@ -27,7 +33,9 @@ const SKIP_PREFIXES = [
   "/_next/image",
   "/favicon.ico",
   "/robots.txt",
-  "/sitemap.xml",
+  // Covers both the index at /sitemap.xml and the `generateSitemaps` shards
+  // served from /sitemap/<id>.xml.
+  "/sitemap",
   "/brand",
   "/icons",
   "/auth",
@@ -61,6 +69,24 @@ function serializeCookie(
   return parts.join("; ");
 }
 
+/**
+ * `/_next/image` responses arrive with no `Cache-Control` at all, so every
+ * visit re-fetches every thumbnail — costly on a page like /dawahcast/playlists
+ * that renders a few hundred of them. The optimiser keys its output on
+ * url+width+quality, so a given URL's bytes only change when the *source* image
+ * is replaced; a day of freshness with a week of stale-while-revalidate keeps
+ * that recoverable without paying for it on every navigation.
+ */
+function withImageCacheHeaders(response: Response): Response {
+  if (response.status !== 200) return response;
+  const out = new Response(response.body, response);
+  out.headers.set(
+    "Cache-Control",
+    "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800",
+  );
+  return out;
+}
+
 /** Responses from the Next handler have immutable headers, so clone to append. */
 function withSetCookies(response: Response, cookies: string[]): Response {
   if (cookies.length === 0) return response;
@@ -85,7 +111,10 @@ const worker = {
     }
 
     if (SKIP_PREFIXES.some((p) => url.pathname.startsWith(p))) {
-      return openNextHandler.fetch(request, env, ctx);
+      const response = await openNextHandler.fetch(request, env, ctx);
+      return url.pathname.startsWith("/_next/image")
+        ? withImageCacheHeaders(response)
+        : response;
     }
 
     const jar = parseCookies(request.headers.get("Cookie"));
@@ -94,6 +123,19 @@ const worker = {
     // No tokens at all → anonymous visitor, no upstream call.
     const refreshToken = jar.get(REFRESH_COOKIE);
     if (jar.get(ACCESS_COOKIE) || !refreshToken) {
+      // Anonymous catalogue documents are the crawler and cold-visitor path, and
+      // the only responses safe to share between visitors. `isCacheableRequest`
+      // re-checks the cookie jar itself, so an authed request falls straight
+      // through to the Next server untouched.
+      if (isCacheableRequest(request, url)) {
+        const policy = cachePolicyFor(url.pathname)!;
+        const origin = () => openNextHandler.fetch(request, env, ctx);
+        const cached = await readCache(url, policy, origin, (p) =>
+          ctx.waitUntil(p),
+        );
+        if (cached) return cached;
+        return writeCache(await origin(), url, policy, (p) => ctx.waitUntil(p));
+      }
       return openNextHandler.fetch(request, env, ctx);
     }
 

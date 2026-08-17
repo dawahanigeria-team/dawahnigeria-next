@@ -3,9 +3,10 @@ import { getLecturers, getStates } from "@/features/dawahcast/server/listings";
 import { LecturerBrowser } from "@/features/dawahcast/components/LecturerBrowser";
 import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
+import { CollectionJsonLd } from "@/lib/CollectionJsonLd";
 
 export const metadata: Metadata = {
-  title: "Lecturers - Get islamic resources on Dawah Nigeria",
+  title: "Islamic Lecturers & Scholars",
   description: "Browse Islamic scholars and lecturers on DawahCast.",
   alternates: { canonical: ROUTES.lecturers },
 };
@@ -17,6 +18,16 @@ export default async function LecturersPage() {
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
       <h1 className="sr-only">Lecturers</h1>
+      <CollectionJsonLd
+        name="Islamic Lecturers and Scholars"
+        description="Islamic scholars and lecturers with recordings on DawahCast."
+        path={ROUTES.lecturers}
+        items={lecturers.map((lecturer) => ({
+          name: lecturer.name,
+          path: ROUTES.resourcePerson(lecturer.id),
+          image: lecturer.image,
+        }))}
+      />
       <PageHeaderRouter title="Lecturer" />
       <LecturerBrowser initialLecturers={lecturers} states={states} />
     </div>

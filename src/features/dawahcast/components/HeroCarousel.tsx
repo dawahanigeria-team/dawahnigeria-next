@@ -47,9 +47,26 @@ export function HeroCarousel({ slides }: { slides: SliderImage[] }) {
   const go = (delta: number) => setIndex((i) => (i + delta + total) % total);
 
   return (
-    <div className="hero-frame group">
+    // The slides arrive as bare URLs with no captions, so there is no honest
+    // per-image alt text to write — inventing one would be worse than none.
+    // Naming the region instead is what gives a screen-reader user something:
+    // they learn a featured carousel is here and that the dots below control it,
+    // rather than walking past a run of unlabelled images.
+    <div
+      className="hero-frame group"
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Featured lectures"
+    >
       {slides.map((src, i) => (
-        <div key={src} data-state={stateFor(i, index, total)} className="hero-slide">
+        <div
+          key={src}
+          data-state={stateFor(i, index, total)}
+          className="hero-slide"
+          role="group"
+          aria-roledescription="slide"
+          aria-label={`${i + 1} of ${total}`}
+        >
           <Image
             src={src}
             alt=""
@@ -84,7 +101,19 @@ export function HeroCarousel({ slides }: { slides: SliderImage[] }) {
         </div>
       )}
 
-      {/* 4px dots, as CRA draws them. */}
+      {/* 4px dots, as CRA draws them — but a 4x4 button is unhittable on a
+          phone, so each gets a ::before overlay as its real target.
+
+          The overlay grows *vertically* (44px) and only to the 8px pitch
+          horizontally. There are up to 20 slides: at ~412px of viewport a 24px
+          square target per dot needs 480px, so widening either overlaps
+          neighbours — making the wrong slide easy to select — or, as an earlier
+          attempt did, overflows the row and lets flex shrink every dot to zero
+          width, hiding them outright. 8px wide tiles the row exactly, with no
+          overlap, while the 44px height does the real work for a thumb.
+
+          `shrink-0` is what guarantees the dots keep their 4px even if the slide
+          count grows again. */}
       <div className="absolute inset-x-0 bottom-7 z-[12] flex items-center justify-center space-x-1">
         {slides.map((url, i) => (
           <button
@@ -93,7 +122,7 @@ export function HeroCarousel({ slides }: { slides: SliderImage[] }) {
             aria-label={`Go to slide ${i + 1}`}
             aria-current={i === index}
             onClick={() => setIndex(i)}
-            className={`h-[4px] w-[4px] rounded-full ${
+            className={`relative h-[4px] w-[4px] shrink-0 rounded-full before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-2 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ${
               i === index ? "bg-white" : "bg-gray-400"
             }`}
           />
