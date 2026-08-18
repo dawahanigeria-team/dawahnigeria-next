@@ -126,10 +126,18 @@ export function isRscRequest(request: Request, url: URL): boolean {
  * Cache key. Explicit and document-only, so it can never collide with a flight
  * payload. Tracking params are stripped so a shared campaign link and a clean
  * one resolve to the same entry.
+ *
+ * `version` is the Worker's deployed version id, and it is load-bearing: this
+ * cache outlives a deploy, but Wrangler replaces the whole asset set on every
+ * deploy, so HTML stored by an earlier build references chunk hashes that no
+ * longer exist. Serving it produced a page whose CSS and JS 404 — visibly
+ * unstyled and non-interactive. Keying on the version makes every entry from a
+ * previous deploy unreachable rather than merely stale.
  */
-function cacheKey(url: URL): Request {
+function cacheKey(url: URL, version: string): Request {
   const key = new URL(url.toString());
   for (const param of TRACKING_PARAMS) key.searchParams.delete(param);
+  key.searchParams.set("__v", version);
   key.searchParams.sort();
   key.hash = "";
   // A synthetic host keeps these entries in their own namespace, well away from
@@ -199,9 +207,10 @@ export async function readCache(
   policy: Policy,
   revalidate: () => Promise<Response>,
   waitUntil: (promise: Promise<unknown>) => void,
+  version: string,
 ): Promise<Response | null> {
   const cache = await caches.open("dn-html");
-  const key = cacheKey(url);
+  const key = cacheKey(url, version);
   const hit = await cache.match(key);
   if (!hit) return null;
 
@@ -231,6 +240,7 @@ export async function writeCache(
   url: URL,
   policy: Policy,
   waitUntil: (promise: Promise<unknown>) => void,
+  version: string,
 ): Promise<Response> {
   const contentType = response.headers.get("Content-Type") ?? "";
   if (response.status !== 200 || !contentType.includes("text/html")) {
@@ -241,6 +251,6 @@ export async function writeCache(
   const [toStore, toSend] = response.body ? response.body.tee() : [null, null];
   const storable = forStorage(new Response(toStore, response), policy);
   const cache = await caches.open("dn-html");
-  waitUntil(cache.put(cacheKey(url), storable));
+  waitUntil(cache.put(cacheKey(url, version), storable));
   return forVisitor(new Response(toSend, response), policy, "MISS");
 }

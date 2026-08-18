@@ -108,11 +108,26 @@ const worker = {
       if (isCacheableRequest(request, url)) {
         const policy = cachePolicyFor(url.pathname)!;
         const origin = () => openNextHandler.fetch(request, env, ctx);
-        const cached = await readCache(url, policy, origin, (p) =>
-          ctx.waitUntil(p),
+        // Entries are scoped to the deployed version: this cache survives a
+        // deploy, but the asset set does not, so HTML from an earlier build
+        // points at chunk hashes that now 404. Falls back to a constant off
+        // Cloudflare (`wrangler dev`), where there is no version to read.
+        const version = env.CF_VERSION_METADATA?.id ?? "dev";
+        const cached = await readCache(
+          url,
+          policy,
+          origin,
+          (p) => ctx.waitUntil(p),
+          version,
         );
         if (cached) return cached;
-        return writeCache(await origin(), url, policy, (p) => ctx.waitUntil(p));
+        return writeCache(
+          await origin(),
+          url,
+          policy,
+          (p) => ctx.waitUntil(p),
+          version,
+        );
       }
       return openNextHandler.fetch(request, env, ctx);
     }
