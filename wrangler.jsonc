@@ -48,12 +48,12 @@
     "API_PROJECT_ID": "206cf92c-8a46-45ef-bf3f-a6ef92fc6f25"
   },
 
-  // Workers has no default image optimizer, so `next/image` would 500 without a
-  // binding. This routes /_next/image through Cloudflare Images; the allowed
-  // hosts are still whatever `images.remotePatterns` in next.config.mjs permits.
-  "images": {
-    "binding": "IMAGES"
-  },
+  // No `images` binding on purpose. `unoptimized: true` in next.config.mjs
+  // means /_next/image is never requested, so nothing needs one -- and leaving
+  // the binding off is what makes the $0 guarantee structural rather than a
+  // setting someone can quietly flip back. Cloudflare Images is metered per
+  // unique transformation with no hard spend cap, and it was the entire
+  // Aug 2026 bill. Read the comment in next.config.mjs before re-adding it.
 
   // Backing store for the ISR/fetch cache (charts revalidate=1800, the tagged
   // landing fetches). Without it every isolate starts cold and re-fetches.

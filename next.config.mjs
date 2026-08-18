@@ -21,6 +21,24 @@ const nextConfig = {
       { protocol: "https", hostname: "dawahnigeria.com" },
       { protocol: "https", hostname: "media.dawahnigeria.com" },
     ],
+    // The catalogue's artwork is already a sized derivative: every image under
+    // media.dawahnigeria.com/dc_images is 250x200 and ~30KB. Next cannot read
+    // the intrinsic size of a remote image, so it generated the full default
+    // ladder anyway -- the live landing page was requesting w=1920, w=2048 and
+    // w=3840 of a 250px source, i.e. paying Cloudflare to upscale 15x into a
+    // file bigger and blurrier than the original.
+    //
+    // Cloudflare bills $0.50 per 1,000 unique (image, width, quality) per
+    // calendar month, and the sitemap has Googlebot walk the whole catalogue
+    // every month, so that full ladder gets minted whether or not a human ever
+    // looks at it. One landing page alone emitted 246 distinct transformations
+    // across 13 widths.
+    //
+    // Serving the derivative as-is is both cheaper and sharper. The only thing
+    // given up is WebP/AVIF re-encoding, worth single-digit KB on a 30KB JPEG
+    // -- not worth a per-image fee. If the backend ever starts storing large
+    // originals, revisit this rather than reaching for the optimiser again.
+    unoptimized: true,
   },
   async redirects() {
     return [

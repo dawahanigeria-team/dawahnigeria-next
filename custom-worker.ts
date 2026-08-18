@@ -30,7 +30,6 @@ import {
 // completes and have no session to refresh).
 const SKIP_PREFIXES = [
   "/_next/static",
-  "/_next/image",
   "/favicon.ico",
   "/robots.txt",
   // Covers both the index at /sitemap.xml and the `generateSitemaps` shards
@@ -69,24 +68,6 @@ function serializeCookie(
   return parts.join("; ");
 }
 
-/**
- * `/_next/image` responses arrive with no `Cache-Control` at all, so every
- * visit re-fetches every thumbnail — costly on a page like /dawahcast/playlists
- * that renders a few hundred of them. The optimiser keys its output on
- * url+width+quality, so a given URL's bytes only change when the *source* image
- * is replaced; a day of freshness with a week of stale-while-revalidate keeps
- * that recoverable without paying for it on every navigation.
- */
-function withImageCacheHeaders(response: Response): Response {
-  if (response.status !== 200) return response;
-  const out = new Response(response.body, response);
-  out.headers.set(
-    "Cache-Control",
-    "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=604800",
-  );
-  return out;
-}
-
 /** Responses from the Next handler have immutable headers, so clone to append. */
 function withSetCookies(response: Response, cookies: string[]): Response {
   if (cookies.length === 0) return response;
@@ -111,10 +92,7 @@ const worker = {
     }
 
     if (SKIP_PREFIXES.some((p) => url.pathname.startsWith(p))) {
-      const response = await openNextHandler.fetch(request, env, ctx);
-      return url.pathname.startsWith("/_next/image")
-        ? withImageCacheHeaders(response)
-        : response;
+      return openNextHandler.fetch(request, env, ctx);
     }
 
     const jar = parseCookies(request.headers.get("Cookie"));
