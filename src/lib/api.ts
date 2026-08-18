@@ -1,5 +1,40 @@
 import { env } from "./env";
 
+/**
+ * Artwork lives behind img.dawahnigeria.com, a Cloudflare-proxied host that
+ * serves only the two image trees. The lecture audio stays on media.* because
+ * large files hosted outside Cloudflare are not permitted on their CDN, so the
+ * split has to hold here too: rewrite the artwork trees and nothing else.
+ * `/dnlectures*` must never be pointed at img.* -- the origin returns 403 there
+ * anyway, but the rule is easier to keep if this list stays explicit.
+ *
+ * Applied to the raw response text rather than per field: one upstream record
+ * carries artwork under `mp3_thumbnail`, `img`, `lec_img` and `lec_thumbnail`,
+ * and each PHP endpoint invents its own names. Matching on the URL catches
+ * every field, including ones added later.
+ *
+ * PHP's json_encode escapes forward slashes, so the payload really contains
+ * `https:\/\/media.dawahnigeria.com\/dc_images\/...`. Both forms are handled
+ * so this keeps working if the backend ever sets JSON_UNESCAPED_SLASHES.
+ */
+const ARTWORK_TREES = ["dc_images", "dnimages"];
+
+function rewriteArtworkHost(body: string): string {
+  let out = body;
+  for (const tree of ARTWORK_TREES) {
+    out = out
+      .replaceAll(
+        `https:\\/\\/media.dawahnigeria.com\\/${tree}\\/`,
+        `https:\\/\\/img.dawahnigeria.com\\/${tree}\\/`,
+      )
+      .replaceAll(
+        `https://media.dawahnigeria.com/${tree}/`,
+        `https://img.dawahnigeria.com/${tree}/`,
+      );
+  }
+  return out;
+}
+
 export type ApiCache = {
   /** Seconds to revalidate. Pass 0 to disable caching. */
   revalidate?: number | false;
@@ -77,7 +112,7 @@ async function request<T>(path: string, init: Init = {}): Promise<T> {
     );
   }
 
-  return res.json() as Promise<T>;
+  return JSON.parse(rewriteArtworkHost(await res.text())) as T;
 }
 
 export const api = {
