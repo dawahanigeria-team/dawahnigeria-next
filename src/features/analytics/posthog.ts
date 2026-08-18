@@ -1,6 +1,6 @@
 "use client";
 
-import posthog from "posthog-js";
+import type { PostHog } from "posthog-js";
 import { EVENTS, type EventName, type EventProperties } from "./events";
 
 export { EVENTS };
@@ -13,53 +13,95 @@ export type { EventName };
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
-let started = false;
+/**
+ * posthog-js is 233KB, and a static import put it on the critical path of every
+ * page via <AnalyticsProvider> in the root layout. Analytics must never block
+ * first paint, so the SDK is fetched dynamically after mount instead.
+ *
+ * The cost of deferring is a window between the first capture() call and the
+ * bundle arriving. Rather than drop those events — the initial $pageview lands
+ * squarely inside it — calls made while loading are queued and replayed in
+ * order. Each closure captures its own timestamp at call time, so a replayed
+ * event is still stamped when it happened, not when it was flushed.
+ */
+let ph: PostHog | null = null;
+let loading = false;
+const pending: Array<(p: PostHog) => void> = [];
 
-/** True once init() has run with a usable key. Guards every capture below. */
+function withPostHog(fn: (p: PostHog) => void) {
+  if (ph) {
+    fn(ph);
+    return;
+  }
+  // Deliberately not queued before initPostHog() runs: with no key there is no
+  // consumer for these events and the queue would grow unbounded.
+  if (loading) pending.push(fn);
+}
+
+/** True once the SDK is loaded or on its way. Guards every capture below. */
 export function isEnabled(): boolean {
-  return started;
+  return ph !== null || loading;
 }
 
 export function initPostHog() {
-  if (started || typeof window === "undefined") return;
-  if (!POSTHOG_KEY || !POSTHOG_HOST) return;
+  if (loading || ph || typeof window === "undefined") return;
+  // Copied to locals so the narrowing survives into the async callback.
+  const key = POSTHOG_KEY;
+  const host = POSTHOG_HOST;
+  if (!key || !host) return;
 
-  posthog.init(POSTHOG_KEY, {
-    api_host: POSTHOG_HOST,
-    // Pageviews are captured manually by <PageViewTracker>. The App Router
-    // navigates without a document load, and posthog's own history hook would
-    // double-count against our explicit capture (which is what CRA did — it
-    // ran capture_pageview:true *and* a manual $pageview on every route).
-    capture_pageview: false,
-    capture_pageleave: true,
-    autocapture: true,
-    disable_session_recording: false,
-    enable_recording_console_log: true,
-    capture_performance: true,
-    loaded: (ph) => {
-      if (process.env.NODE_ENV === "development") ph.debug();
-    },
-  });
+  // Set before the import resolves so a second call cannot start a second
+  // init, and so withPostHog() begins queueing immediately rather than
+  // dropping the events fired during the fetch.
+  loading = true;
 
-  // The CRA app and this rewrite report into the same PostHog project. This
-  // super property is attached to every event from here so the two can be told
-  // apart (and compared) while both are live.
-  posthog.register({ app: "next-web" });
+  void import("posthog-js")
+    .then(({ default: posthog }) => {
+      posthog.init(key, {
+        api_host: host,
+        // Pageviews are captured manually by <PageViewTracker>. The App Router
+        // navigates without a document load, and posthog's own history hook would
+        // double-count against our explicit capture (which is what CRA did — it
+        // ran capture_pageview:true *and* a manual $pageview on every route).
+        capture_pageview: false,
+        capture_pageleave: true,
+        autocapture: true,
+        disable_session_recording: false,
+        enable_recording_console_log: true,
+        capture_performance: true,
+        loaded: (p) => {
+          if (process.env.NODE_ENV === "development") p.debug();
+        },
+      });
 
-  started = true;
+      // The CRA app and this rewrite report into the same PostHog project. This
+      // super property is attached to every event from here so the two can be told
+      // apart (and compared) while both are live.
+      posthog.register({ app: "next-web" });
+
+      ph = posthog;
+      for (const fn of pending.splice(0)) fn(posthog);
+    })
+    .catch(() => {
+      // A blocked or failed chunk must not strand every later call in the
+      // queue. Reopening the gate also lets a subsequent init() retry.
+      loading = false;
+      pending.length = 0;
+    });
 }
 
 export function capture(event: EventName, properties: EventProperties = {}) {
-  if (!started) return;
-  posthog.capture(event, {
-    ...properties,
-    timestamp: new Date().toISOString(),
-  });
+  const timestamp = new Date().toISOString();
+  withPostHog((p) =>
+    p.capture(event, {
+      ...properties,
+      timestamp,
+    }),
+  );
 }
 
 export function capturePageView(properties: EventProperties = {}) {
-  if (!started) return;
-  posthog.capture("$pageview", properties);
+  withPostHog((p) => p.capture("$pageview", properties));
 }
 
 export function captureWebVital(metric: {
@@ -69,24 +111,24 @@ export function captureWebVital(metric: {
   rating: string;
   navigationType: string;
 }) {
-  if (!started) return;
-  posthog.capture("web_vital", {
-    ...metric,
-    app: "next-web",
-  });
+  withPostHog((p) =>
+    p.capture("web_vital", {
+      ...metric,
+      app: "next-web",
+    }),
+  );
 }
 
 export function identifyUser(
   userId: string,
   properties: EventProperties = {},
 ) {
-  if (!started || !userId) return;
-  posthog.identify(userId, properties);
+  if (!userId) return;
+  withPostHog((p) => p.identify(userId, properties));
 }
 
 export function resetUser() {
-  if (!started) return;
-  posthog.reset();
+  withPostHog((p) => p.reset());
 }
 
 // ─── Domain helpers ──────────────────────────────────────────────────────────
