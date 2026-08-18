@@ -91,16 +91,28 @@ export default async function LectureDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const lecture = await getLecture(id);
-  if (!lecture) notFound();
-
+  // Started before the session read so the per-user calls overlap it instead of
+  // queueing behind it. getSession() only reads cookies, so it costs nothing
+  // here. See the album page for the same shape.
+  const lecturePromise = getLecture(id);
   const session = await getSession();
-  const [favoriteAudioIds, userPlaylists] = session
-    ? await Promise.all([
+  // Hearts and the playlist menu are decoration on a public page — a failure
+  // should cost them, not the lecture. Also keeps the promise from floating
+  // unhandled if the lecture 404s below.
+  const userDataPromise = session
+    ? Promise.all([
         getFavoriteIds(session.user.id, "audio"),
         getUserPlaylists(session.user.id),
-      ])
-    : [undefined, undefined];
+      ]).catch(() => [undefined, undefined] as const)
+    : null;
+
+  const lecture = await lecturePromise;
+  if (!lecture) notFound();
+
+  const [favoriteAudioIds, userPlaylists] = (await userDataPromise) ?? [
+    undefined,
+    undefined,
+  ];
 
   const playerTrack: PlayerTrack | null = lecture.audioUrl
     ? {

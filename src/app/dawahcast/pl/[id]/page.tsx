@@ -69,20 +69,27 @@ export default async function PlaylistDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const playlist = await getPlaylist(id);
-  if (!playlist) notFound();
-
-  const [lectures, session] = await Promise.all([
-    getPlaylistLectures(playlist.lectureIds) as Promise<AlbumTrack[]>,
-    getSession(),
-  ]);
-  const [favoriteAudioIds, favoritePlaylistIds, userPlaylists] = session
-    ? await Promise.all([
+  // Three serial round trips before this: playlist → lectures → per-user reads.
+  // Only the middle one is a real dependency (it needs `lectureIds`), so the
+  // per-user reads start up front and are awaited last, leaving two stages.
+  const playlistPromise = getPlaylist(id);
+  const session = await getSession();
+  const userDataPromise = session
+    ? Promise.all([
         getFavoriteIds(session.user.id, "audio"),
         getFavoriteIds(session.user.id, "playlist"),
         getUserPlaylists(session.user.id),
-      ])
-    : [undefined, undefined, undefined];
+      ]).catch(() => [undefined, undefined, undefined] as const)
+    : null;
+
+  const playlist = await playlistPromise;
+  if (!playlist) notFound();
+
+  const lectures = (await getPlaylistLectures(
+    playlist.lectureIds,
+  )) as AlbumTrack[];
+  const [favoriteAudioIds, favoritePlaylistIds, userPlaylists] =
+    (await userDataPromise) ?? [undefined, undefined, undefined];
 
   const canonicalUrl = absoluteUrl(env.siteUrl, ROUTES.playlist(id));
 

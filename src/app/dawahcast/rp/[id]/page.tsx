@@ -82,22 +82,27 @@ export default async function LecturerPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const lecturer = await getLecturer(id);
+  // Every fetch on this page keys off `id`, not off the lecturer record, so the
+  // profile, the three tab datasets and the per-user read all start together —
+  // one round trip instead of three. Each is caught individually so one empty
+  // tab doesn't take down the profile.
+  const lecturerPromise = getLecturer(id);
+  const tabsPromise = Promise.all([
+    getLecturerLectures(id, 1).catch(() => []),
+    getLecturerAlbums(id, 1).catch(() => []),
+    getLecturerPlaylists(id).catch(() => []),
+  ]);
+  const session = await getSession();
+  const favoritesPromise = session
+    ? getFavoriteIds(session.user.id, "rp").catch(() => undefined)
+    : null;
+
+  const lecturer = await lecturerPromise;
   if (!lecturer) notFound();
   const canonicalUrl = absoluteUrl(env.siteUrl, ROUTES.resourcePerson(id));
 
-  // All three tab datasets plus the session read are independent — run together
-  // so switching tabs never waits on a fetch.
-  const [lectures, albums, playlistRows, session] = await Promise.all([
-    getLecturerLectures(id, 1).catch(() => []),
-    getLecturerAlbums(id, 1).catch(() => []),
-    getLecturerPlaylists(id),
-    getSession(),
-  ]);
-
-  const favoriteLecturerIds = session
-    ? await getFavoriteIds(session.user.id, "rp")
-    : undefined;
+  const [lectures, albums, playlistRows] = await tabsPromise;
+  const favoriteLecturerIds = (await favoritesPromise) ?? undefined;
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">

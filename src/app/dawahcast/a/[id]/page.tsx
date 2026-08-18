@@ -6,7 +6,7 @@ import { AlbumHero } from "@/features/dawahcast/components/audio-detail/AlbumHer
 import { BackLink } from "@/features/dawahcast/components/BackLink";
 import { TrackList } from "@/features/dawahcast/components/audio-detail/TrackList";
 import { SimilarAlbumsSection } from "@/features/dawahcast/components/audio-detail/SimilarAlbumsSection";
-import { LectureRowSkeleton } from "@/features/dawahcast/components/Skeletons";
+import { AlbumRowSkeleton } from "@/features/dawahcast/components/Skeletons";
 import { getSession } from "@/features/auth/session";
 import { getFavoriteIds } from "@/features/favorites/server";
 import { AlbumActions } from "@/features/dawahcast/components/audio-detail/AlbumActions";
@@ -59,19 +59,30 @@ export default async function AlbumDetailPage({
   params: Promise<Params>;
 }) {
   const { id } = await params;
-  const album = await getAlbum(id);
-  if (!album) notFound();
-  const canonicalUrl = absoluteUrl(env.siteUrl, ROUTES.album(id));
-
+  // Started before the session read so the per-user calls below overlap it
+  // rather than queueing behind it. The album endpoint runs ~800ms and the
+  // per-user ones ~460ms; awaited in sequence that is the sum, in parallel it
+  // is the max. getSession() only reads cookies, so it adds no latency here.
+  const albumPromise = getAlbum(id);
   const session = await getSession();
-  // Three independent per-user reads — fire them concurrently to keep TTFB flat.
-  const [favoriteAudioIds, favoriteAlbumIds, userPlaylists] = session
-    ? await Promise.all([
+  // Favorites/playlists are decoration on a public page: a failure should cost
+  // the hearts and the playlist menu, not the album. getUserPlaylists already
+  // swallows its own errors; this extends the same rule to favorites, and keeps
+  // the promise from floating unhandled if the album 404s below.
+  const userDataPromise = session
+    ? Promise.all([
         getFavoriteIds(session.user.id, "audio"),
         getFavoriteIds(session.user.id, "album"),
         getUserPlaylists(session.user.id),
-      ])
-    : [undefined, undefined, undefined];
+      ]).catch(() => [undefined, undefined, undefined] as const)
+    : null;
+
+  const album = await albumPromise;
+  if (!album) notFound();
+  const canonicalUrl = absoluteUrl(env.siteUrl, ROUTES.album(id));
+
+  const [favoriteAudioIds, favoriteAlbumIds, userPlaylists] =
+    (await userDataPromise) ?? [undefined, undefined, undefined];
 
   const albumActions = (
     <AlbumActions
@@ -121,14 +132,16 @@ export default async function AlbumDetailPage({
           userPlaylists={userPlaylists}
         />
       </section>
-      {album.lecturerId && (
-        <Suspense fallback={<LectureRowSkeleton />}>
+      {/* Ternary, not `&&`: lecturerId comes from the upstream `rp_id`, which is
+          0 for records with no resource person — `&&` would print that 0. */}
+      {album.lecturerId ? (
+        <Suspense fallback={<AlbumRowSkeleton />}>
           <SimilarAlbumsSection
             lecturerId={album.lecturerId}
             lecturerName={album.lecturer}
           />
         </Suspense>
-      )}
+      ) : null}
       <CommentSection itemId={id} type="album" pathname={ROUTES.album(id)} />
     </div>
   );
