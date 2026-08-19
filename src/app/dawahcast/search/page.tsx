@@ -103,7 +103,7 @@ export default async function SearchPage({
         <PageHeaderRouter title="Search" />
         <h1 className="text-2xl font-semibold text-foreground">Search</h1>
         <div className="mt-4">
-          <SearchControls initialQuery="" sort={sort} />
+          <SearchControls initialQuery="" sort={sort} filters={filters} />
         </div>
         <p className="mt-12 text-center text-sm text-muted-foreground">
           Search for lectures, albums, lecturers, and more.
@@ -136,7 +136,7 @@ export default async function SearchPage({
       <h1 className="text-2xl font-semibold text-foreground">Search</h1>
 
       <div className="mt-4">
-        <SearchControls initialQuery={query} sort={sort} />
+        <SearchControls initialQuery={query} sort={sort} filters={filters} />
       </div>
 
       <p className="mt-4 text-lg text-foreground sm:text-xl">

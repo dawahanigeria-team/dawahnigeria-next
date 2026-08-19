@@ -7,12 +7,18 @@ import type { SearchSort } from "./server";
 import { trackSearch } from "@/features/analytics/posthog";
 import { ROUTES } from "@/lib/routes";
 
+const FILTER_KEYS = ["lang", "rp", "cat", "album"] as const;
+export type SearchFilterState = Record<(typeof FILTER_KEYS)[number], string[]>;
+
 export function SearchControls({
   initialQuery,
   sort,
+  filters,
 }: {
   initialQuery: string;
   sort: SearchSort;
+  /** Active facet selections, so the controls can carry them across a re-query. */
+  filters: SearchFilterState;
 }) {
   const router = useRouter();
   const [value, setValue] = useState(initialQuery);
@@ -26,6 +32,9 @@ export function SearchControls({
     trackSearch(q, { sort });
     const params = new URLSearchParams({ query: q });
     if (sort !== "relevance") params.set("sort", sort);
+    // Facets are deliberately not carried over: their ids belong to the
+    // previous query's results, so a lecturer or album filter would usually
+    // strand the new search on zero results.
     router.push(`${ROUTES.search}?${params.toString()}`);
   };
 
@@ -34,6 +43,12 @@ export function SearchControls({
     if (initialQuery) params.set("query", initialQuery);
     const next = e.target.value;
     if (next !== "relevance") params.set("sort", next);
+    // Sort is orthogonal to the facets, so the active ones have to survive it.
+    // Rebuilding the URL from query+sort alone dropped them, which silently
+    // widened the result set the moment anyone touched this control.
+    for (const key of FILTER_KEYS) {
+      if (filters[key].length) params.set(key, filters[key].join(","));
+    }
     // Changing sort re-queries from page 1.
     router.push(`${ROUTES.search}?${params.toString()}`);
   };
