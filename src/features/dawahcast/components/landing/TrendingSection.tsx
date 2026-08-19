@@ -1,19 +1,23 @@
 import { getTrendingByLanguage } from "../../server/listings";
-import { DEFAULT_LANGUAGE_ID } from "@/lib/languages";
+import { getHomeLanguage } from "../../server/homeLanguage";
 import { HomeTrending } from "./HomeTrending";
 import { getListeningPreferences } from "@/features/preferences/server";
 import { getRecentlyPosted } from "../../server/landing";
 import { LectureRow } from "../LectureRow";
 
 /**
- * Server half of the home trending row: fetches the default (English) feed so
- * the row is populated on first paint. The client half swaps it out if the
- * visitor has a stored language preference.
+ * Server half of the home trending row.
+ *
+ * The language now comes from `getHomeLanguage`, so the chips start on whatever
+ * the hero and "recently posted" are already showing. Previously this always
+ * rendered English while those two rendered something else entirely, and the
+ * client half then refetched on mount — a visible swap on every first paint for
+ * anyone with a stored choice.
  */
 export async function TrendingSection() {
   const preferences = await getListeningPreferences();
   if (preferences.configured) {
-    const lectures = await getRecentlyPosted(1, preferences);
+    const lectures = await getRecentlyPosted(1);
     return (
       <div className="my-1 mobile-up:my-3">
         <LectureRow
@@ -24,6 +28,7 @@ export async function TrendingSection() {
       </div>
     );
   }
-  const lectures = await getTrendingByLanguage(DEFAULT_LANGUAGE_ID, 1);
-  return <HomeTrending initialLectures={lectures} />;
+  const { id: languageId } = await getHomeLanguage();
+  const lectures = await getTrendingByLanguage(languageId, 1);
+  return <HomeTrending initialLectures={lectures} initialLanguageId={languageId} />;
 }

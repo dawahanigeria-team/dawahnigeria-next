@@ -24,6 +24,32 @@
 
 const AUTH_COOKIES = ["dn_access", "dn_refresh", "dn_user"];
 
+/**
+ * The language chip's cookie (`LANGUAGE_COOKIE` in `lib/languages`).
+ *
+ * Anonymous entries are shared between visitors, and the landing feeds now
+ * render in whatever language this names — so it has to be part of the key.
+ * Without it the first visitor through a cold cache would pin their language
+ * onto everyone else's front page for the life of the entry.
+ *
+ * Spelled out rather than imported so this module stays free of app imports:
+ * it runs in the Worker, ahead of the Next server.
+ */
+const LANGUAGE_COOKIE = "dn_langid";
+
+/**
+ * Values the language cookie may take, mirroring `HOME_LANGUAGES`.
+ *
+ * An allowlist rather than a sanitiser: the value reaches a shared cache key,
+ * and anything accepted verbatim would let a visitor mint unlimited distinct
+ * entries for one URL by varying the cookie, evicting the entries real traffic
+ * depends on. Unknown values collapse to the no-choice variant, which is also
+ * what the page itself falls back to.
+ */
+const LANGUAGE_VARIANTS = new Set([
+  "all", "6", "7", "8", "157", "9", "46504", "50041", "877", "53181",
+]);
+
 /** Query params that identify a campaign, not a document. */
 const TRACKING_PARAMS = [
   "utm_source",
@@ -106,6 +132,38 @@ export function cachePolicyFor(pathname: string): Policy | null {
   return null;
 }
 
+/**
+ * Paths whose rendered output actually depends on the language cookie.
+ *
+ * Only the home page does: its hero, chips and rows all resolve through
+ * `getHomeLanguage`. Every other cached surface — the fixed listings, and every
+ * one of the catalogue's detail pages — renders identically whatever the cookie
+ * says. Keying those on it would multiply their entries by the number of
+ * languages for no benefit, and on a catalogue this size that evicts the
+ * entries real traffic depends on. Cache variants are only ever worth paying
+ * for where the content genuinely differs.
+ */
+const LANGUAGE_VARYING_PATHS = ["/dawahcast", "/dawahcast/home"];
+
+/**
+ * The cache variant for this request: the chosen language on a page that varies
+ * by it, and "" everywhere else — including for a visitor who has chosen
+ * nothing, who shares the rotation's entry with every other such visitor.
+ */
+export function languageVariant(
+  cookieHeader: string | null,
+  pathname: string,
+): string {
+  const path = pathname.replace(/\/+$/, "") || "/";
+  if (!LANGUAGE_VARYING_PATHS.includes(path)) return "";
+  if (!cookieHeader) return "";
+  const match = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${LANGUAGE_COOKIE}=([^;]*)`),
+  );
+  if (!match) return "";
+  return LANGUAGE_VARIANTS.has(match[1]) ? match[1] : "";
+}
+
 export function hasAuthCookie(cookieHeader: string | null): boolean {
   if (!cookieHeader) return false;
   return AUTH_COOKIES.some((name) =>
@@ -134,10 +192,11 @@ export function isRscRequest(request: Request, url: URL): boolean {
  * unstyled and non-interactive. Keying on the version makes every entry from a
  * previous deploy unreachable rather than merely stale.
  */
-function cacheKey(url: URL, version: string): Request {
+function cacheKey(url: URL, version: string, variant: string): Request {
   const key = new URL(url.toString());
   for (const param of TRACKING_PARAMS) key.searchParams.delete(param);
   key.searchParams.set("__v", version);
+  if (variant) key.searchParams.set("__lang", variant);
   key.searchParams.sort();
   key.hash = "";
   // A synthetic host keeps these entries in their own namespace, well away from
@@ -208,9 +267,10 @@ export async function readCache(
   revalidate: () => Promise<Response>,
   waitUntil: (promise: Promise<unknown>) => void,
   version: string,
+  variant: string,
 ): Promise<Response | null> {
   const cache = await caches.open("dn-html");
-  const key = cacheKey(url, version);
+  const key = cacheKey(url, version, variant);
   const hit = await cache.match(key);
   if (!hit) return null;
 
@@ -241,6 +301,7 @@ export async function writeCache(
   policy: Policy,
   waitUntil: (promise: Promise<unknown>) => void,
   version: string,
+  variant: string,
 ): Promise<Response> {
   const contentType = response.headers.get("Content-Type") ?? "";
   if (response.status !== 200 || !contentType.includes("text/html")) {
@@ -251,6 +312,6 @@ export async function writeCache(
   const [toStore, toSend] = response.body ? response.body.tee() : [null, null];
   const storable = forStorage(new Response(toStore, response), policy);
   const cache = await caches.open("dn-html");
-  waitUntil(cache.put(cacheKey(url, version), storable));
+  waitUntil(cache.put(cacheKey(url, version, variant), storable));
   return forVisitor(new Response(toSend, response), policy, "MISS");
 }

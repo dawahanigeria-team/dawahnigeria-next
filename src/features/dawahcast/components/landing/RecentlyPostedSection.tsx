@@ -5,7 +5,7 @@ import { getListeningPreferences } from "@/features/preferences/server";
 
 export async function RecentlyPostedSection() {
   const preferences = await getListeningPreferences();
-  const lectures = await getRecentlyPosted(1, preferences);
+  const lectures = await getRecentlyPosted(1);
   return (
     <LectureRow
       heading={preferences.configured ? "Fresh for You" : "Recently Posted"}

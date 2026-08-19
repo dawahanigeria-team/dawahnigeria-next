@@ -1,11 +1,7 @@
 import { connection } from "next/server";
 import { api, apiAdminister } from "@/lib/api";
-import { DEFAULT_LANGUAGE_ID } from "@/lib/languages";
 import { resolveLecture } from "../lectureFields";
-import {
-  preferenceQuery,
-  type ListeningPreferences,
-} from "@/features/preferences/server";
+import { homeLanguageQuery } from "./homeLanguage";
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 // These mirror the shapes returned by the legacy PHP endpoints. They are kept
@@ -48,38 +44,14 @@ export async function getSpecialFeaturesLectures() {
 }
 
 /**
- * The language filter the landing feed asks for.
- *
- * `preferenceQuery` is empty for a visitor who has not configured preferences,
- * which asks the endpoint for every language at once — and that is not the
- * neutral choice it looks like. Uploads are not evenly distributed: 210 of the
- * last 240 are in one language, and page one of the unfiltered feed is entirely
- * that language. So the "no preference" path handed a first-time visitor a home
- * page that reads as though the platform serves one language only.
- *
- * Falling back to `DEFAULT_LANGUAGE_ID` is what the trending row has always
- * done (see `TrendingSection`), so this makes the whole page speak with one
- * voice instead of the hero and the row above it disagreeing.
- */
-function landingLanguageQuery(preferences?: ListeningPreferences): string {
-  if (preferences?.configured) return preferenceQuery(preferences);
-  return `&language_ids=${DEFAULT_LANGUAGE_ID}`;
-}
-
-/**
  * Paginated "recently posted" lectures.
  * Source: GET /leclisting_recent.php?action=get_recent_audio&page=N
  *
  * 60s revalidate keeps the firehose fresh without hammering upstream.
  */
-export async function getRecentlyPosted(
-  page = 1,
-  preferences?: ListeningPreferences,
-) {
+export async function getRecentlyPosted(page = 1) {
   return api.get<LectureSummary[]>(
-    `/leclisting_recent.php?action=get_recent_audio&page=${page}${landingLanguageQuery(
-      preferences,
-    )}`,
+    `/leclisting_recent.php?action=get_recent_audio&page=${page}${await homeLanguageQuery()}`,
     { cache: { revalidate: 60, tags: [LANDING_TAGS.recent] } },
   );
 }
@@ -111,12 +83,10 @@ const HERO_ROTATION_MS = 5 * 60_000;
  * the request-time boundary the read depends on, which is also what keeps this
  * correct if the app ever turns on Cache Components.
  */
-export async function getFeaturedLecture(
-  preferences?: ListeningPreferences,
-): Promise<LectureSummary | null> {
+export async function getFeaturedLecture(): Promise<LectureSummary | null> {
   await connection();
 
-  const lectures = await getRecentlyPosted(1, preferences);
+  const lectures = await getRecentlyPosted(1);
   const pool = lectures
     .filter((lecture) => {
       const resolved = resolveLecture(lecture);

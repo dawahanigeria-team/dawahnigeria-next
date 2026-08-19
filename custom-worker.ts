@@ -21,6 +21,7 @@ import {
 import {
   cachePolicyFor,
   isCacheableRequest,
+  languageVariant,
   readCache,
   writeCache,
 } from "./src/lib/htmlCache";
@@ -113,12 +114,22 @@ const worker = {
         // points at chunk hashes that now 404. Falls back to a constant off
         // Cloudflare (`wrangler dev`), where there is no version to read.
         const version = env.CF_VERSION_METADATA?.id ?? "dev";
+        // The home page renders in the language this cookie names, so its
+        // entries have to be separated by it or the first visitor through a
+        // cold cache pins their language onto everyone else's front page.
+        // Returns "" for every other path, which all render identically —
+        // fragmenting those would cost hit rate and buy nothing.
+        const variant = languageVariant(
+          request.headers.get("Cookie"),
+          url.pathname,
+        );
         const cached = await readCache(
           url,
           policy,
           origin,
           (p) => ctx.waitUntil(p),
           version,
+          variant,
         );
         if (cached) return cached;
         return writeCache(
@@ -127,6 +138,7 @@ const worker = {
           policy,
           (p) => ctx.waitUntil(p),
           version,
+          variant,
         );
       }
       return openNextHandler.fetch(request, env, ctx);

@@ -8,7 +8,6 @@ import { fetchTrendingForLanguage } from "../../server/trendingActions";
 import type { LectureSummary } from "../../server/landing";
 import {
   ALL_LANGUAGES_ID,
-  DEFAULT_LANGUAGE_ID,
   HOME_LANGUAGES,
   languageName,
   readStoredLanguage,
@@ -21,8 +20,6 @@ import { ROUTES } from "@/lib/routes";
 // client render can differ from the server's without a hydration mismatch —
 // and without a setState-in-effect to "correct" it afterwards.
 const subscribeNever = () => () => {};
-const getStored = (): LanguageId => readStoredLanguage() ?? DEFAULT_LANGUAGE_ID;
-const getStoredOnServer = (): LanguageId => DEFAULT_LANGUAGE_ID;
 
 /**
  * The home feed's language chips + trending row.
@@ -33,20 +30,28 @@ const getStoredOnServer = (): LanguageId => DEFAULT_LANGUAGE_ID;
  */
 export function HomeTrending({
   initialLectures,
+  initialLanguageId,
 }: {
   initialLectures: LectureSummary[];
+  /**
+   * The language the server already rendered `initialLectures` in. Seeding from
+   * it rather than a hardcoded default is what removes the refetch-on-mount:
+   * the server reads the same cookie this component writes, so for a visitor
+   * who has chosen, both halves already agree and there is nothing to swap.
+   */
+  initialLanguageId: LanguageId;
 }) {
   const storedLanguage = useSyncExternalStore(
     subscribeNever,
-    getStored,
-    getStoredOnServer,
+    () => readStoredLanguage() ?? initialLanguageId,
+    () => initialLanguageId,
   );
 
   const [languageId, setLanguageId] = useState<LanguageId>(storedLanguage);
   const [lectures, setLectures] = useState(initialLectures);
   const [pending, setPending] = useState(false);
   // Which language `lectures` currently holds, so we only refetch on a change.
-  const loadedFor = useRef<LanguageId>(DEFAULT_LANGUAGE_ID);
+  const loadedFor = useRef<LanguageId>(initialLanguageId);
   const requestId = useRef(0);
 
   useEffect(() => {

@@ -8,7 +8,7 @@ import { getListeningPreferences } from "@/features/preferences/server";
 
 export async function HeroSection() {
   const preferences = await getListeningPreferences();
-  const featured = await getFeaturedLecture(preferences);
+  const featured = await getFeaturedLecture();
 
   if (!featured) return null;
 
