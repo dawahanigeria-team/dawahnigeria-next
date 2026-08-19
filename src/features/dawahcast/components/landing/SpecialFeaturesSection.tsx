@@ -1,5 +1,9 @@
 import { getSpecialFeaturesLectures, type LectureSummary } from "../../server/landing";
 import { LectureRow } from "../LectureRow";
+import {
+  getListeningPreferences,
+  matchesListeningPreferences,
+} from "@/features/preferences/server";
 
 // The admin endpoint returns an array of "groups". Each group has a name and a
 // `more` array of lectures. Shape is loose because the upstream is untyped.
@@ -14,7 +18,21 @@ export async function SpecialFeaturesSection() {
   // landing — the other Suspense boundaries already streamed cleanly.
   let groups: SpecialFeatureGroup[] = [];
   try {
-    groups = (await getSpecialFeaturesLectures()) as unknown as SpecialFeatureGroup[];
+    const [featureGroups, preferences] = await Promise.all([
+      getSpecialFeaturesLectures(),
+      getListeningPreferences(),
+    ]);
+    groups = (featureGroups as unknown as SpecialFeatureGroup[]).map((group) => ({
+      ...group,
+      more: preferences.configured
+        ? group.more?.filter((lecture) =>
+            matchesListeningPreferences(
+              lecture as unknown as Record<string, unknown>,
+              preferences,
+            ),
+          )
+        : group.more,
+    }));
   } catch (err) {
     console.error("SpecialFeaturesSection: upstream error", err);
     return null;
@@ -27,7 +45,7 @@ export async function SpecialFeaturesSection() {
   return (
     <>
       {visible.map((g) => (
-        <LectureRow key={g.name} heading={g.name} lectures={g.more!} />
+        <LectureRow key={g.name} heading={g.name} lectures={g.more!} limit={6} />
       ))}
     </>
   );

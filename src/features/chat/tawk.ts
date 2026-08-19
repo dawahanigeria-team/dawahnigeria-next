@@ -44,14 +44,35 @@ export function shouldLoadTawkWidget(): boolean {
   return canUseStorage(window.localStorage) && canUseStorage(window.sessionStorage);
 }
 
-/** Defer to idle so the widget never competes with first paint. */
-export function scheduleWhenIdle(callback: () => void, timeout = 1500): () => void {
+/**
+ * Defer well beyond first interaction on constrained connections. The widget
+ * transfers more than 200KB, so a short 1.5s timeout made it part of the
+ * effective startup payload even though it used requestIdleCallback.
+ */
+export function scheduleWhenIdle(callback: () => void, timeout = 10_000): () => void {
   if (typeof window === "undefined") return () => {};
 
-  if (typeof window.requestIdleCallback === "function") {
-    const id = window.requestIdleCallback(callback, { timeout });
-    return () => window.cancelIdleCallback?.(id);
-  }
-  const id = window.setTimeout(callback, timeout);
-  return () => window.clearTimeout(id);
+  const connection = (navigator as Navigator & {
+    connection?: { effectiveType?: string; saveData?: boolean };
+  }).connection;
+  const constrained =
+    connection?.saveData === true ||
+    connection?.effectiveType === "slow-2g" ||
+    connection?.effectiveType === "2g" ||
+    connection?.effectiveType === "3g";
+  const delay = constrained ? 30_000 : timeout;
+
+  let idleId: number | undefined;
+  const timerId = window.setTimeout(() => {
+    if (typeof window.requestIdleCallback === "function") {
+      idleId = window.requestIdleCallback(callback, { timeout: 1500 });
+      return;
+    }
+    callback();
+  }, delay);
+
+  return () => {
+    window.clearTimeout(timerId);
+    if (idleId !== undefined) window.cancelIdleCallback?.(idleId);
+  };
 }

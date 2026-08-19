@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { FaFacebook, FaYoutube } from "react-icons/fa";
 import {
@@ -7,6 +6,7 @@ import {
   AiOutlineTwitter,
 } from "react-icons/ai";
 import { ROUTES } from "@/lib/routes";
+import { StoreBadge } from "./StoreBadge";
 
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.dawahnigeria.app&pcampaignid=web_share";
@@ -104,34 +104,8 @@ export function Footer() {
                 Download Our App
               </h3>
               <div className="flex flex-col gap-3">
-                <a
-                  href={APP_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Download app on App Store"
-                >
-                  <Image
-                    src="/brand/apple.svg"
-                    alt="Download on App Store"
-                    width={132}
-                    height={40}
-                    className="h-10 w-auto"
-                  />
-                </a>
-                <a
-                  href={PLAY_STORE_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Download app on Google Play"
-                >
-                  <Image
-                    src="/brand/googleplay.svg"
-                    alt="Get it on Google Play"
-                    width={132}
-                    height={40}
-                    className="h-10 w-auto"
-                  />
-                </a>
+                <StoreBadge href={APP_STORE_URL} store="App Store" />
+                <StoreBadge href={PLAY_STORE_URL} store="Google Play" />
               </div>
             </div>
 

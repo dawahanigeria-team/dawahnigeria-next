@@ -88,6 +88,15 @@ export async function getLecturers(
   return toLecturerItems(list);
 }
 
+/** Lightweight catalogue used only by the account preference picker. */
+export async function getPreferenceLecturers(): Promise<LecturerListItem[]> {
+  const list = await api.get<LecturerListRaw[]>(
+    `/all_rps_api.php?offset=0&lim=400&page=1`,
+    { cache: { revalidate: 3600, tags: ["lecturers:preferences"] } },
+  );
+  return toLecturerItems(list);
+}
+
 /**
  * GET /rplisting_multi_nid_api.php?id={id} — a single featured lecturer.
  * Backs the top chip row, which filters to one scholar rather than a region.

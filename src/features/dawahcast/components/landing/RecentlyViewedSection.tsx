@@ -37,6 +37,7 @@ export async function RecentlyViewedSection() {
       heading={session ? "Pick up where you left off" : "Recently Viewed"}
       lectures={lectures}
       moreHref={ROUTES.moreRecentlyViewed}
+      limit={6}
     />
   );
 }

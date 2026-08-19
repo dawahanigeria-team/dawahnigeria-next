@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ROUTES } from "@/lib/routes";
 import { SearchBar } from "./SearchBar";
 import { SidebarToggle } from "./SidebarToggle";
+import { StoreBadge } from "./StoreBadge";
 
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=com.dawahnigeria.app&pcampaignid=web_share";
@@ -61,34 +62,8 @@ export function Header() {
         </div>
 
         <div className="ml-auto flex shrink-0 flex-row items-center gap-3 narrow:hidden">
-          <a
-            href={PLAY_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Download app on Google play"
-          >
-            <Image
-              src="/brand/googleplay.svg"
-              alt="Get it on Google Play"
-              width={132}
-              height={40}
-              className="h-10 w-auto"
-            />
-          </a>
-          <a
-            href={APP_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Download app on App Store"
-          >
-            <Image
-              src="/brand/apple.svg"
-              alt="Download on the App Store"
-              width={132}
-              height={40}
-              className="h-10 w-auto"
-            />
-          </a>
+          <StoreBadge href={PLAY_STORE_URL} store="Google Play" />
+          <StoreBadge href={APP_STORE_URL} store="App Store" />
         </div>
 
         {/* Below 1035px the two badges collapse into one pill. */}

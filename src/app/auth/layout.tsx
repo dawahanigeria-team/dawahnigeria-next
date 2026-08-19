@@ -1,7 +1,22 @@
 import Image from "next/image";
+import { DM_Serif_Display, Manrope } from "next/font/google";
 import { AuthGeometricBackground } from "@/features/auth/AuthGeometricBackground";
 import { AuthTabs } from "@/features/auth/AuthTabs";
 import { AuthCloseButton } from "@/features/auth/AuthCloseButton";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-dm-serif",
+  display: "swap",
+});
 
 /**
  * Auth shell, ported from CRA's `Authentication/auth/Auth.jsx` + `auth.scss`.
@@ -18,7 +33,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen w-full flex-row items-center justify-center overflow-hidden bg-background font-manrope">
+    <div className={`${manrope.variable} ${dmSerif.variable} relative flex min-h-screen w-full flex-row items-center justify-center overflow-hidden bg-background font-manrope`}>
       <AuthGeometricBackground />
 
       <div className="auth-fade-up relative z-[1] grid min-h-screen w-full grid-cols-1 overflow-hidden md-auth:min-h-[90vh] md-auth:w-[95%] md-auth:max-w-[1200px] md-auth:grid-cols-[45%_55%] md-auth:rounded-3xl md-auth:shadow-[0_20px_60px_rgba(0,0,0,0.3),0_0_100px_rgba(214,255,0,0.1)] lg:max-w-[1300px]">

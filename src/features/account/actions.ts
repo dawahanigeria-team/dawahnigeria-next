@@ -10,6 +10,7 @@ import {
   readRefreshToken,
   writeSessionCookies,
 } from "@/features/auth/cookies";
+import { saveListeningPreferences } from "@/features/preferences/server";
 
 function asString(v: FormDataEntryValue | null): string {
   return typeof v === "string" ? v.trim() : "";
@@ -20,6 +21,35 @@ export type ProfileState = {
   fieldErrors?: Record<string, string>;
   success?: boolean;
 };
+
+export type ListeningPreferencesState = {
+  error?: string;
+  success?: boolean;
+};
+
+export async function saveListeningPreferencesAction(
+  _prev: ListeningPreferencesState,
+  formData: FormData,
+): Promise<ListeningPreferencesState> {
+  const session = await getSession();
+  if (!session) return { error: "Sign in to save listening preferences." };
+
+  const languageIds = formData.getAll("languageIds").map(Number);
+  const lecturerIds = formData.getAll("lecturerIds").map(Number);
+  if (!languageIds.some((id) => id > 0) && !lecturerIds.some((id) => id > 0)) {
+    return { error: "Choose at least one language or scholar." };
+  }
+
+  try {
+    await saveListeningPreferences(languageIds, lecturerIds);
+  } catch {
+    return { error: "Couldn’t save your choices. Please try again." };
+  }
+
+  revalidatePath("/dawahcast");
+  revalidatePath("/dawahcast/account");
+  return { success: true };
+}
 
 /**
  * POST /user_profile.php { action: "update_profile", user_id, ...fields }

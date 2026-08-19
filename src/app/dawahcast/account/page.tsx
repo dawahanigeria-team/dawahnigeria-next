@@ -9,6 +9,10 @@ import {
 } from "@/features/account/AccountForms";
 import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
+import { ListeningPreferencesForm } from "@/features/account/ListeningPreferencesForm";
+import { getListeningPreferences } from "@/features/preferences/server";
+import { getLanguages } from "@/features/dawahcast/server/languages";
+import { getPreferenceLecturers } from "@/features/dawahcast/server/listings";
 
 export const metadata: Metadata = {
   title: "Account settings",
@@ -27,7 +31,13 @@ export default async function AccountPage() {
 
   // Best-effort: if the profile fetch fails we fall back to whatever the
   // session cookie carries, so the page still renders something useful.
-  const profile = (await getProfile(session.user.id)) ?? {
+  const [profileResult, preferences, languages, lecturers] = await Promise.all([
+    getProfile(session.user.id),
+    getListeningPreferences(),
+    getLanguages(),
+    getPreferenceLecturers(),
+  ]);
+  const profile = profileResult ?? {
     id: session.user.id,
     username: session.user.username,
     email: session.user.email,
@@ -40,7 +50,7 @@ export default async function AccountPage() {
       <PageHeaderRouter title="Account" />
       <h1 className="text-2xl font-semibold text-foreground">Account settings</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Manage your DawahCast profile.
+        Manage your profile and listening experience.
       </p>
 
       <section aria-labelledby="profile-heading" className="mt-8">
@@ -48,6 +58,23 @@ export default async function AccountPage() {
           Profile
         </h2>
         <ProfileForm profile={profile} />
+      </section>
+
+      <section
+        aria-labelledby="listening-heading"
+        className="mt-10 border-t border-border pt-6"
+      >
+        <h2 id="listening-heading" className="mb-1 text-base font-semibold text-foreground">
+          Listening preferences
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Choose what appears in your Home recommendations. Search and the full library stay open.
+        </p>
+        <ListeningPreferencesForm
+          initialPreferences={preferences}
+          languages={languages}
+          lecturers={lecturers}
+        />
       </section>
 
       <section

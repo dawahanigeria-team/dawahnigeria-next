@@ -90,8 +90,9 @@ export function HomeTrending({
                 ? "Trending Now"
                 : `Trending in ${activeName}`
             }
-            lectures={lectures.slice(0, 10)}
+            lectures={lectures}
             moreHref={ROUTES.trending}
+            limit={6}
           />
         </div>
       ) : (

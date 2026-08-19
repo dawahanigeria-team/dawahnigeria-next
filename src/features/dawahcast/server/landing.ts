@@ -1,12 +1,13 @@
 import { api, apiAdminister } from "@/lib/api";
+import {
+  preferenceQuery,
+  type ListeningPreferences,
+} from "@/features/preferences/server";
 
 // ─── Shared types ────────────────────────────────────────────────────────────
 // These mirror the shapes returned by the legacy PHP endpoints. They are kept
 // intentionally loose (record-like) because the upstream API is untyped; tighten
 // them as each consuming page is migrated.
-
-// The upstream returns a plain string[] of image URLs — not an object array.
-export type SliderImage = string;
 
 export type LectureSummary = {
   id: string | number;
@@ -23,24 +24,11 @@ export type LectureSummary = {
 // ─── Cache tags ──────────────────────────────────────────────────────────────
 // Tag groups let us revalidate related caches at once via revalidateTag().
 export const LANDING_TAGS = {
-  slider: "dawahcast:landing:slider",
   specialFeatures: "dawahcast:landing:special",
   recent: "dawahcast:landing:recent",
 } as const;
 
 // ─── Server functions ────────────────────────────────────────────────────────
-
-/**
- * Hero carousel images for the landing page.
- * Source: GET /slider_image.php
- *
- * Revalidates hourly; invalidated immediately by revalidateTag on publish.
- */
-export async function getSliderImages() {
-  return api.get<SliderImage[]>("/slider_image.php", {
-    cache: { revalidate: 3600, tags: [LANDING_TAGS.slider] },
-  });
-}
 
 /**
  * Editor-curated "special features" row.
@@ -62,9 +50,14 @@ export async function getSpecialFeaturesLectures() {
  *
  * 60s revalidate keeps the firehose fresh without hammering upstream.
  */
-export async function getRecentlyPosted(page = 1) {
+export async function getRecentlyPosted(
+  page = 1,
+  preferences?: ListeningPreferences,
+) {
   return api.get<LectureSummary[]>(
-    `/leclisting_recent.php?action=get_recent_audio&page=${page}`,
+    `/leclisting_recent.php?action=get_recent_audio&page=${page}${
+      preferences ? preferenceQuery(preferences) : ""
+    }`,
     { cache: { revalidate: 60, tags: [LANDING_TAGS.recent] } },
   );
 }

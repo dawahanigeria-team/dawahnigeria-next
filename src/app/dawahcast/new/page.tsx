@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fraunces, Public_Sans } from "next/font/google";
 import { IoMusicalNotesOutline } from "react-icons/io5";
 import { getNewLectures } from "@/features/dawahcast/server/listings";
 import { NewReleaseTable } from "@/features/dawahcast/components/NewReleaseTable";
@@ -9,6 +10,20 @@ import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 import { CollectionJsonLd } from "@/lib/CollectionJsonLd";
 import { resolveLecture } from "@/features/dawahcast/lectureFields";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["600"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
+
+const publicSans = Public_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-public-sans",
+  display: "swap",
+});
 
 const PAGE_SIZE = 10;
 
@@ -36,7 +51,7 @@ export default async function NewPage({
   return (
     // This page runs its own editorial palette rather than the app theme —
     // matching the live site, which scopes those CSS variables to `/new`.
-    <div className="flex w-full flex-col bg-[#0f1117] px-[3%] pb-16 pt-8">
+    <div className={`${fraunces.variable} ${publicSans.variable} flex w-full flex-col bg-[#0f1117] px-[3%] pb-16 pt-8`}>
       <CollectionJsonLd
         name="New Islamic Lecture Releases"
         description="The most recently published Islamic lectures on DawahCast."
