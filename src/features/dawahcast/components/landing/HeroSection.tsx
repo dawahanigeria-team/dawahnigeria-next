@@ -3,16 +3,12 @@ import Link from "next/link";
 import { FiArrowRight, FiHeadphones } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
 import { formatDuration, resolveLecture } from "../../lectureFields";
-import { getRecentlyPosted } from "../../server/landing";
+import { getFeaturedLecture } from "../../server/landing";
 import { getListeningPreferences } from "@/features/preferences/server";
 
 export async function HeroSection() {
   const preferences = await getListeningPreferences();
-  const lectures = await getRecentlyPosted(1, preferences);
-  const featured = lectures.find((lecture) => {
-    const resolved = resolveLecture(lecture);
-    return Boolean(resolved.id && resolved.title);
-  });
+  const featured = await getFeaturedLecture(preferences);
 
   if (!featured) return null;
 

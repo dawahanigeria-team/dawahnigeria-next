@@ -1,4 +1,7 @@
+import { connection } from "next/server";
 import { api, apiAdminister } from "@/lib/api";
+import { DEFAULT_LANGUAGE_ID } from "@/lib/languages";
+import { resolveLecture } from "../lectureFields";
 import {
   preferenceQuery,
   type ListeningPreferences,
@@ -45,6 +48,25 @@ export async function getSpecialFeaturesLectures() {
 }
 
 /**
+ * The language filter the landing feed asks for.
+ *
+ * `preferenceQuery` is empty for a visitor who has not configured preferences,
+ * which asks the endpoint for every language at once — and that is not the
+ * neutral choice it looks like. Uploads are not evenly distributed: 210 of the
+ * last 240 are in one language, and page one of the unfiltered feed is entirely
+ * that language. So the "no preference" path handed a first-time visitor a home
+ * page that reads as though the platform serves one language only.
+ *
+ * Falling back to `DEFAULT_LANGUAGE_ID` is what the trending row has always
+ * done (see `TrendingSection`), so this makes the whole page speak with one
+ * voice instead of the hero and the row above it disagreeing.
+ */
+function landingLanguageQuery(preferences?: ListeningPreferences): string {
+  if (preferences?.configured) return preferenceQuery(preferences);
+  return `&language_ids=${DEFAULT_LANGUAGE_ID}`;
+}
+
+/**
  * Paginated "recently posted" lectures.
  * Source: GET /leclisting_recent.php?action=get_recent_audio&page=N
  *
@@ -55,11 +77,56 @@ export async function getRecentlyPosted(
   preferences?: ListeningPreferences,
 ) {
   return api.get<LectureSummary[]>(
-    `/leclisting_recent.php?action=get_recent_audio&page=${page}${
-      preferences ? preferenceQuery(preferences) : ""
-    }`,
+    `/leclisting_recent.php?action=get_recent_audio&page=${page}${landingLanguageQuery(
+      preferences,
+    )}`,
     { cache: { revalidate: 60, tags: [LANDING_TAGS.recent] } },
   );
+}
+
+/** How many of the newest lectures the hero may pick from. */
+const HERO_POOL_SIZE = 8;
+
+/**
+ * How often the hero's pick advances.
+ *
+ * Anonymous home HTML is edge-cached for 300s (`LISTING` in `lib/htmlCache`),
+ * so a per-request pick would be frozen for the life of each cache entry anyway
+ * while signed-in visitors — who bypass that cache — got a different hero on
+ * every navigation. Advancing on a fixed clock gives both the same cadence, and
+ * aligning it with the cache window means the entry that gets stored is still
+ * the right one when it expires.
+ */
+const HERO_ROTATION_MS = 5 * 60_000;
+
+/**
+ * The lecture the home page leads with.
+ *
+ * Rotates rather than always taking the newest: the feed only moves when
+ * something is published, so pinning the hero to index 0 left the same lecture
+ * on the front page for hours at a time.
+ *
+ * The clock read lives here rather than in the component because `Date.now()`
+ * is impure and React forbids calling it during render. `connection()` marks
+ * the request-time boundary the read depends on, which is also what keeps this
+ * correct if the app ever turns on Cache Components.
+ */
+export async function getFeaturedLecture(
+  preferences?: ListeningPreferences,
+): Promise<LectureSummary | null> {
+  await connection();
+
+  const lectures = await getRecentlyPosted(1, preferences);
+  const pool = lectures
+    .filter((lecture) => {
+      const resolved = resolveLecture(lecture);
+      return Boolean(resolved.id && resolved.title);
+    })
+    .slice(0, HERO_POOL_SIZE);
+
+  if (!pool.length) return null;
+
+  return pool[Math.floor(Date.now() / HERO_ROTATION_MS) % pool.length];
 }
 
 /**
