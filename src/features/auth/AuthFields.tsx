@@ -111,16 +111,22 @@ export function AuthSubmitButton({
   pending,
   pendingLabel,
   disabled,
+  type = "submit",
+  onClick,
 }: {
   children: React.ReactNode;
   pending?: boolean;
   pendingLabel?: string;
   /** Blocks submission without showing the pending label. */
   disabled?: boolean;
+  /** `button` for the auth error boundary's retry, which has no form to submit. */
+  type?: "submit" | "button";
+  onClick?: () => void;
 }) {
   return (
     <button
-      type="submit"
+      type={type}
+      onClick={onClick}
       disabled={pending || disabled}
       className="auth-fade-up relative h-14 w-full overflow-hidden rounded-[14px] border-none bg-gradient-to-br from-[#d6ff00] to-[#b8e000] text-[17px] font-semibold text-[#070707] shadow-[0_4px_15px_rgba(214,255,0,0.3),0_0_30px_rgba(214,255,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(214,255,0,0.4),0_0_40px_rgba(214,255,0,0.2)] disabled:cursor-not-allowed disabled:opacity-60 md-auth:rounded-xl"
     >
