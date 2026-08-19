@@ -12,6 +12,7 @@ export type { EventName };
  */
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+const POSTHOG_UI_HOST = process.env.NEXT_PUBLIC_POSTHOG_UI_HOST;
 
 /**
  * posthog-js is 233KB, and a static import put it on the critical path of every
@@ -48,7 +49,8 @@ export function initPostHog() {
   // Copied to locals so the narrowing survives into the async callback.
   const key = POSTHOG_KEY;
   const host = POSTHOG_HOST;
-  if (!key || !host) return;
+  const uiHost = POSTHOG_UI_HOST;
+  if (!key || !host || !uiHost) return;
 
   // Set before the import resolves so a second call cannot start a second
   // init, and so withPostHog() begins queueing immediately rather than
@@ -59,6 +61,9 @@ export function initPostHog() {
     .then(({ default: posthog }) => {
       posthog.init(key, {
         api_host: host,
+        // api_host is the first-party managed proxy. Keep ui_host pointed at
+        // the real EU PostHog app so toolbar and dashboard links still work.
+        ui_host: uiHost,
         // Pageviews are captured manually by <PageViewTracker>. The App Router
         // navigates without a document load, and posthog's own history hook would
         // double-count against our explicit capture (which is what CRA did — it

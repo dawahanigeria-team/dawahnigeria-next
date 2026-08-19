@@ -75,6 +75,12 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
   // Consecutive unplayable tracks, so auto-skip cannot run away down a queue
   // whose files are all missing. Reset as soon as anything plays.
   const failedInARow = useRef(0);
+  // Media events can be duplicated or even dispatched synthetically by browser
+  // integrations. Treat the audio element's real `paused` property as the
+  // source of truth and only sync/track genuine state transitions. Without
+  // this guard, one affected browser can emit thousands of alternating
+  // lecture_played/lecture_paused events and exhaust PostHog's client limiter.
+  const mediaIsPlaying = useRef(false);
 
   const track = usePlayer((s) => s.track);
   const playing = usePlayer((s) => s.playing);
@@ -91,6 +97,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const resolved = new URL(track.audioUrl, document.baseURI).href;
     if (audio.src !== resolved) {
       if (!audio.paused) swappingSrc.current = true;
+      // A source change ends the previous track's playing state even in a
+      // browser that omits or delays the corresponding pause event.
+      mediaIsPlaying.current = false;
       audio.src = track.audioUrl;
       // Restore the persisted position, but only for the first src we load —
       // that is the track rehydrated from localStorage on a cold start.
@@ -202,6 +211,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           usePlayer.getState().setDuration(e.currentTarget.duration || 0)
         }
         onEnded={() => {
+          mediaIsPlaying.current = false;
           const ended = usePlayer.getState().track;
           if (ended) {
             // Reached the end, so listen duration is the full track length.
@@ -220,7 +230,11 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             }
           }
         }}
-        onPlay={() => {
+        onPlay={(e) => {
+          // A synthetic/duplicate event must not mutate the store or analytics.
+          if (e.currentTarget.paused || mediaIsPlaying.current) return;
+          mediaIsPlaying.current = true;
+
           // Anything playing means the run of dead tracks is over, and clears
           // the skip notice so it does not linger over a working lecture.
           failedInARow.current = 0;
@@ -230,6 +244,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           if (current) trackLecturePlay(forAnalytics(current));
         }}
         onError={() => {
+          mediaIsPlaying.current = false;
           const media = audioRef.current?.error;
           console.error(
             `[player] media error ${media?.code ?? "?"}: ${media?.message || "could not load audio"}`,
@@ -261,12 +276,22 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           );
         }}
         onPause={(e) => {
+          // Some browser integrations dispatch `pause` without actually
+          // pausing the media element. Ignore those events entirely.
+          if (!e.currentTarget.paused) return;
+
           // The `pause` the browser emits while swapping src is not the user
           // pausing — consume it and leave the store alone.
           if (swappingSrc.current) {
             swappingSrc.current = false;
+            mediaIsPlaying.current = false;
             return;
           }
+
+          // Duplicate pause events are not new user actions.
+          if (!mediaIsPlaying.current) return;
+          mediaIsPlaying.current = false;
+
           usePlayer.getState().setPlaying(false);
           const current = usePlayer.getState().track;
           // The browser fires `pause` immediately before `ended`; skip that one
