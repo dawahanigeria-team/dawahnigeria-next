@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+
 import { Nunito_Sans } from "next/font/google";
 import { ThemeScript } from "@/features/dawahcast/components/site-shell/ThemeScript";
 import "./globals.css";
@@ -34,7 +34,14 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    // Imported lazily, matching instrumentation.ts: a static `@sentry/nextjs`
+    // import is evaluated when the *server* bundle initialises too (this file is
+    // SSR'd), and the Node SDK compiles a Wasm module lexer at module scope —
+    // which Cloudflare Workers refuse, producing an unhandledRejection that can
+    // take the isolate down on a cold start.
+    void import("@sentry/nextjs").then((Sentry) => {
+      Sentry.captureException(error);
+    });
   }, [error]);
 
   return (

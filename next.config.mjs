@@ -64,4 +64,16 @@ export default withSentryConfig(nextConfig, {
   // Routes Sentry's browser requests through the app's own origin so ad/tracker
   // blockers don't silently drop error reports.
   tunnelRoute: "/monitoring",
+  // Sentry's build-time plugin injects its auto-instrumentation wrapper into
+  // the server output, and that wrapper pulls in a code transformer which
+  // compiles a Wasm module lexer at module scope. Cloudflare Workers refuse
+  // runtime Wasm compilation, so it rejected unhandled on every request.
+  //
+  // Nothing is lost: instrumentation.ts already disables the server SDK on
+  // Workers, so this auto-instrumentation had no working backend to report to.
+  // Browser-side Sentry, tunnelRoute and source-map upload are unaffected.
+  autoInstrumentServerFunctions: false,
+  autoInstrumentMiddleware: false,
+  autoInstrumentAppDirectory: false,
+
 });
