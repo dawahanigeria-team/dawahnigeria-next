@@ -2,6 +2,7 @@
 
 import { getRecitationAlbums, getTrending } from "./listings";
 import { getVideos } from "./video";
+import { pickResolverFields } from "../lectureFields";
 import type { LectureSummary } from "./landing";
 import type { Video } from "./video";
 
@@ -18,15 +19,19 @@ import type { Video } from "./video";
  * the list at the first blip. `useInfiniteItems` catches and offers a retry.
  */
 
+// The returned rows are serialized straight into a Server Action response and
+// accumulated in client state, so they are projected down to the columns the
+// resolvers actually read. Raw catalogue rows carry ~64% dead weight.
+
 export async function fetchTrendingPage(page: number): Promise<LectureSummary[]> {
-  return getTrending(page);
+  return pickResolverFields(await getTrending(page));
 }
 
 export async function fetchRecitationsPage(
   page: number,
   limit: number,
 ): Promise<LectureSummary[]> {
-  return getRecitationAlbums(page, limit);
+  return pickResolverFields(await getRecitationAlbums(page, limit));
 }
 
 export async function fetchVideosPage(page: number): Promise<Video[]> {

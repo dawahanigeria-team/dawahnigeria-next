@@ -6,7 +6,10 @@ import { getUserPlaylists } from "@/features/library/server";
 import { ROUTES } from "@/lib/routes";
 import { PageHeaderRouter } from "@/features/dawahcast/components/PageHeaderRouter";
 import { CollectionJsonLd } from "@/lib/CollectionJsonLd";
-import { resolveLecture } from "@/features/dawahcast/lectureFields";
+import {
+  pickResolverFields,
+  resolveLecture,
+} from "@/features/dawahcast/lectureFields";
 
 const TOP_TRENDING_COUNT = 3;
 
@@ -20,7 +23,12 @@ export const metadata: Metadata = {
 export default async function TrendingPage() {
   // Page 1 only: the rest is appended client-side as the sentinel scrolls into
   // view, so there is no `?page=` to read here any more.
-  const lectures = await getTrending(1);
+  //
+  // Projected because these rows are handed to <TrendingList/>, a Client
+  // Component: without it every unread catalogue column (description, file_url,
+  // downloads …) is serialized into the flight payload for every visitor. The
+  // JSON-LD below reads only resolver keys, so it is unaffected.
+  const lectures = pickResolverFields(await getTrending(1));
 
   // Row actions need the viewer's playlists; anonymous visitors get no menu.
   const session = await getSession();

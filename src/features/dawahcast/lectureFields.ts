@@ -83,6 +83,47 @@ export function resolveLecture(lecture: LectureSummary): ResolvedLecture {
 }
 
 /**
+ * Every key `resolveLecture` and `resolveAlbum` above can read.
+ *
+ * Kept immediately below them on purpose. Adding a lookup key to either
+ * resolver without adding it here strips the column before the resolver ever
+ * sees it, and the value goes quietly missing on the client — an "Untitled"
+ * card rather than a crash. There is no test suite in this project to catch
+ * that, so the two must be edited together.
+ */
+const RESOLVER_KEYS = new Set([
+  "id", "nid",
+  "title", "Title", "mp3_title", "lectitle", "album_name", "name",
+  "lecturer", "rpname", "rp", "rp_id", "rpid",
+  "image", "img", "mp3_thumbnail", "lec_thumbnail", "lec_img", "alb_thumbnail",
+  "duration", "mp3_duration", "audio", "mp3_url",
+  "views", "favorites", "share", "shares", "comment", "comments",
+  "cats", "categories",
+]);
+
+/**
+ * Listing endpoints return raw catalogue rows: ~15 columns of which the
+ * resolvers read a handful. When such a row is handed to a Client Component,
+ * *every* column is serialized into the RSC flight payload and shipped to the
+ * browser — measured at ~64% waste on `/dawahcast/trending`, where columns like
+ * `description`, `file_url` and `downloads` are read by nothing.
+ *
+ * Apply this at the boundary where rows cross into a Client Component, never
+ * inside the shared fetchers: server-only consumers still need the full row
+ * (`app/sitemap.ts` reads `updated_date_ts` for lastmod, which is deliberately
+ * not in the set above).
+ */
+export function pickResolverFields<T extends LectureSummary>(rows: T[]): T[] {
+  return rows.map((row) => {
+    const out: Record<string, unknown> = {};
+    for (const key of Object.keys(row)) {
+      if (RESOLVER_KEYS.has(key)) out[key] = (row as Record<string, unknown>)[key];
+    }
+    return out as T;
+  });
+}
+
+/**
  * Upstream durations arrive as "HH:MM:SS" (with the hour zero-padded to either
  * one or two digits), and "0" when unknown. The live site drops a zero hour and
  * the minutes' leading zero, so "00:02:53" reads as "2:53" and "0:10:44" as
