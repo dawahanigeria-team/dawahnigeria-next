@@ -62,7 +62,14 @@
     --muted: 240 0% 20%;
     --muted-foreground: 240 0% 83%;
 
-    --color: 220 0% 53%;
+    /* 53% failed WCAG AA on every surface lighter than the page: 4.48:1 on
+       --footer and --hover (needs 4.5:1 at 14px) and 3.52:1 on --muted.
+       61% is the lowest value that clears 4.5:1 against all five backgrounds
+       this token is painted on — 5.87:1 on footer/hover, 4.60:1 on muted —
+       while staying 27 points below --color-primary so secondary text still
+       reads as secondary. Light mode already passed at 4.92:1, so it is
+       deliberately unchanged. */
+    --color: 220 0% 61%;
     --color-foreground: 68 100% 100%;
     --color-primary: 0 0% 88%;
 

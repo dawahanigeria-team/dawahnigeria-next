@@ -72,7 +72,9 @@ export default function AuthLayout({
         {/* Form column */}
         <div className="relative z-10 order-1 mt-[30vh] min-h-screen w-full overflow-y-auto rounded-t-[32px] bg-background px-6 pb-12 pt-10 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] md-auth:order-2 md-auth:mt-0 md-auth:flex md-auth:flex-col md-auth:rounded-none md-auth:px-12 md-auth:pb-8 md-auth:pt-12 md-auth:shadow-none lg:px-16 lg:pb-12 lg:pt-16">
           <AuthTabs />
-          <div className="w-full flex-1 text-foreground">{children}</div>
+          {/* The auth routes bypass SiteShell, so they need their own <main>
+              landmark; the hero column and tab strip stay outside it. */}
+          <main className="w-full flex-1 text-foreground">{children}</main>
         </div>
       </div>
     </div>

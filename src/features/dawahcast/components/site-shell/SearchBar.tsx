@@ -43,6 +43,11 @@ export function SearchBar() {
         <button
           type="submit"
           disabled={!value.trim()}
+          // At `tab:` and up the visible label is swapped for the icon, which is
+          // aria-hidden — leaving the button with no accessible name at all.
+          // The label matches the visible text below that breakpoint, so it
+          // stays consistent for voice control rather than shadowing it.
+          aria-label="Search"
           className="ml-1 inline-flex min-h-[38px] shrink-0 cursor-pointer items-center justify-center gap-1.5 rounded-[20px] border-0 bg-[#ddff2b] px-[14px] py-1.5 text-[13px] font-semibold text-black transition-opacity duration-150 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 tab:min-w-[38px] tab:px-2"
         >
           <FiSearch className="hidden text-[16px] tab:inline" aria-hidden />

@@ -26,8 +26,10 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
         <div className="relative flex w-full flex-col overflow-hidden">
           <Header />
           {/* CRA .container_child: 3.5rem block padding to clear the fixed nav,
-              3rem at ≤690px. `pb-[146px]` clears the fixed bottom bar. */}
-          <div className="w-full py-14 pb-[146px] mobile:pt-12">{children}</div>
+              3rem at ≤690px. `pb-[146px]` clears the fixed bottom bar.
+              A <main> rather than a div so the page exposes the one landmark
+              screen readers jump to; Header, SideNav and Footer stay outside. */}
+          <main className="w-full py-14 pb-[146px] mobile:pt-12">{children}</main>
           <Footer />
         </div>
       </LayoutShell>

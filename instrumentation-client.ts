@@ -19,6 +19,11 @@ const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
  * roughly first paint to idle — is still missed. Dropping tracing was measured
  * as the alternative and saves only 55KB of the 484KB, which is not worth
  * losing client performance monitoring for.
+ *
+ * Session Replay and browser profiling were added on top of that baseline, so
+ * the deferred chunk is now larger still. They ride the same lazy import and
+ * never touch the critical path — but if this file is ever changed back to a
+ * static import, that is now an even worse trade than when it was written.
  */
 let sentry: typeof SentryTypes | null = null;
 
@@ -41,6 +46,29 @@ function initSentry(Sentry: typeof SentryTypes, dsnValue: string) {
     release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
     tracesSampleRate: Number(
       process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
+    ),
+    integrations: [
+      // Replay masks all text, inputs and media by default; those defaults are
+      // left in place deliberately — this app renders signed-in users' names,
+      // emails and playlists, none of which belong in a replay.
+      Sentry.replayIntegration(),
+      // Chromium-only (JS Self-Profiling API) and inert unless the document was
+      // served with `Document-Policy: js-profiling`, which custom-worker.ts adds
+      // to HTML responses. Without that header this collects nothing at all.
+      Sentry.browserProfilingIntegration(),
+    ],
+    // Record a small share of ordinary sessions, but keep every session that
+    // hit an error (replay buffers the preceding 60s and flushes on error).
+    replaysSessionSampleRate: Number(
+      process.env.NEXT_PUBLIC_SENTRY_REPLAYS_SESSION_SAMPLE_RATE ?? "0.1",
+    ),
+    replaysOnErrorSampleRate: Number(
+      process.env.NEXT_PUBLIC_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE ?? "1.0",
+    ),
+    // Relative to tracesSampleRate, not absolute: the effective profiling rate
+    // is tracesSampleRate * profilesSampleRate, so 0.1 * 1.0 = 10% of sessions.
+    profilesSampleRate: Number(
+      process.env.NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE ?? "1.0",
     ),
     // Carried over from CRA: Tawk's cookie failures are unactionable noise.
     ignoreErrors: ["Unable to store cookie"],
