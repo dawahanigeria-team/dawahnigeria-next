@@ -136,13 +136,23 @@ credentials for anything in this repository.
 
 ### Cloudflare Workers Builds settings
 
-Two settings that are easy to get wrong, because a plain Next.js configuration
-looks correct and fails only at deploy time:
+Settings that are easy to get wrong, because a plain Next.js configuration
+looks correct and fails only at deploy time. **Workers Builds keeps a separate
+configuration for non-production branches, and it does not inherit the
+production one** — both columns have to be set:
 
-| Setting | Value |
-| --- | --- |
-| Build command | `pnpm cf:build` |
-| Deploy command | `npx wrangler deploy` |
+| Setting | Production | Non-production branches |
+| --- | --- | --- |
+| Build command | `pnpm cf:build` | `pnpm cf:build` |
+| Deploy command | `npx wrangler deploy` | `npx wrangler versions upload` |
+
+**Set the non-production build command too.** Leaving it at the default
+(`npm run build`) means every branch push builds green and then fails the
+upload with *"The directory specified by the `assets.directory` field in your
+configuration file does not exist: .open-next/assets"* — because `next build`
+never produces `.open-next/`. Production is unaffected, so this stays invisible
+until someone pushes a branch. It bit `seo-caching-and-mobile-fixes` on
+2026-08-17 and again on 2026-08-22.
 
 **The build command must be `cf:build`, not `build`.** `pnpm build` is plain
 `next build` and produces only `.next/`. The deploy step delegates to
