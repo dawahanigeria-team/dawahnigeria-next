@@ -202,6 +202,7 @@ export default async function LectureDetailPage({
               ) : (
                 <Link
                   href={`/auth/login?next=${encodeURIComponent(ROUTES.lecture(id))}`}
+                  prefetch={false}
                   aria-label={`Sign in to like ${lecture.title}`}
                   className="flex min-h-11 min-w-11 items-center justify-center"
                 >

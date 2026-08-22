@@ -52,6 +52,7 @@ export function LoginForm({ next }: { next?: string }) {
       <div className="auth-fade-up -mt-2 mb-8 flex justify-end">
         <Link
           href="/auth/forgot-password"
+          prefetch={false}
           className="py-2 text-[14px] font-medium text-[#8faa00] transition-colors hover:text-[#d6ff00] hover:underline"
         >
           Forgot password?

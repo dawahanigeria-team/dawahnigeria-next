@@ -34,6 +34,7 @@ export async function CommentSection({ itemId, type, pathname }: Props) {
         <p className="mt-2 text-sm text-muted-foreground">
           <Link
             href={`/auth/login?next=${encodeURIComponent(pathname)}`}
+            prefetch={false}
             className="font-medium text-foreground hover:underline"
           >
             Sign in
