@@ -1,6 +1,11 @@
 "use client";
 
-import type { PostHog } from "posthog-js";
+import type { CaptureResult, PostHog } from "posthog-js";
+import {
+  isOpaqueCrossOriginError,
+  isTawkException,
+  type CapturedException,
+} from "@/lib/thirdPartyErrors";
 import { EVENTS, type EventName, type EventProperties } from "./events";
 
 export { EVENTS };
@@ -44,6 +49,39 @@ export function isEnabled(): boolean {
   return ph !== null || loading;
 }
 
+/**
+ * Drops exception reports that carry no information to act on.
+ *
+ * PostHog's exception autocapture reads `window.onerror` directly and, unlike
+ * `@sentry/core` — which filters `/^Script error\.?$/` in its shipped
+ * `eventFilters` — has no default filter, so a cross-origin throw arrives here
+ * as an issue with no message, file, line or frame. This app already filters
+ * third-party noise out of Sentry in `instrumentation-client.ts`; the two
+ * reporters diverging is what let these reach the issue feed.
+ *
+ * Two things are dropped, both already suppressed on the Sentry side:
+ *   - the opaque cross-origin sentinel, which carries nothing to debug;
+ *   - throws from inside the Tawk.to widget, which we cannot fix.
+ *
+ * Only `$exception` is inspected: `before_send` runs on every captured event,
+ * and this must stay a cheap early return for pageviews and autocapture.
+ */
+function dropUnactionableExceptions(
+  event: CaptureResult | null,
+): CaptureResult | null {
+  if (event?.event !== "$exception") return event;
+
+  const exceptions: CapturedException[] = event.properties?.$exception_list;
+  if (!Array.isArray(exceptions)) return event;
+
+  const unactionable = exceptions.some(
+    (exception) =>
+      isOpaqueCrossOriginError(exception) || isTawkException(exception),
+  );
+
+  return unactionable ? null : event;
+}
+
 export function initPostHog() {
   if (loading || ph || typeof window === "undefined") return;
   // Copied to locals so the narrowing survives into the async callback.
@@ -74,6 +112,7 @@ export function initPostHog() {
         disable_session_recording: false,
         enable_recording_console_log: true,
         capture_performance: true,
+        before_send: dropUnactionableExceptions,
         loaded: (p) => {
           if (process.env.NODE_ENV === "development") p.debug();
         },
