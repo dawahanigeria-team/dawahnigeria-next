@@ -70,6 +70,7 @@ function RequestStep({ onSent }: { onSent: (email: string) => void }) {
         Remembered it?{" "}
         <Link
           href="/auth/login"
+          prefetch={false}
           className="font-medium text-[#8faa00] hover:text-[#d6ff00] hover:underline"
         >
           Log in
@@ -94,6 +95,7 @@ function ResetStep({ email }: { email: string }) {
         />
         <Link
           href="/auth/login"
+          prefetch={false}
           className="flex h-14 w-full items-center justify-center rounded-[14px] bg-gradient-to-br from-[#d6ff00] to-[#b8e000] text-[17px] font-semibold text-[#070707] shadow-[0_4px_15px_rgba(214,255,0,0.3)] transition-all hover:-translate-y-0.5 md-auth:rounded-xl"
         >
           Go to log in

@@ -56,6 +56,7 @@ export function AlbumActions({
         ) : (
           <Link
             href={`/auth/login?next=${encodeURIComponent(href)}`}
+            prefetch={false}
             aria-label={`Sign in to like ${title}`}
             className="flex items-center"
           >

@@ -26,6 +26,9 @@ export function AuthTabs() {
           <Link
             key={tab.href}
             href={tab.href}
+            // Both tabs are force-dynamic with no loading boundary, so the
+            // default prefetch fetches nothing reusable. See Footer.tsx.
+            prefetch={false}
             aria-current={active ? "page" : undefined}
             className="relative -m-2 p-2 no-underline md-auth:m-0 md-auth:p-0"
           >

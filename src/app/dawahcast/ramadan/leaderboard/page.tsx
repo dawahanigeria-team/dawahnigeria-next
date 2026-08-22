@@ -62,6 +62,7 @@ function SignInPrompt() {
       <div className="mt-4 flex items-center justify-center gap-3">
         <Link
           href={`/auth/login?next=${encodeURIComponent(ROUTES.leaderboard)}`}
+          prefetch={false}
           className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
         >
           Login to participate
@@ -95,6 +96,7 @@ async function AuthenticatedLeaderboard({
         <div className="mt-4">
           <Link
             href={`/auth/login?next=${encodeURIComponent(ROUTES.leaderboard)}`}
+            prefetch={false}
             className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
           >
             Login again

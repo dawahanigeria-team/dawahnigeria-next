@@ -125,12 +125,14 @@ export function SideNav({
           <span className="flex flex-row items-center gap-[0.2rem]">
             <Link
               href="/auth/login"
+              prefetch={false}
               className="text-[14px] font-bold leading-[21px] text-color hover:text-color-foreground mobile:text-[12px] dark:hover:text-[#ddff00]"
             >
               Log in/
             </Link>
             <Link
               href="/auth/signup"
+              prefetch={false}
               className="text-[14px] font-bold leading-[21px] text-color hover:text-color-foreground mobile:text-[12px] dark:hover:text-[#ddff00]"
             >
               Sign Up

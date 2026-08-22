@@ -161,6 +161,7 @@ export default async function LecturerPage({
               ) : (
                 <Link
                   href={`/auth/login?next=${encodeURIComponent(ROUTES.resourcePerson(id))}`}
+                  prefetch={false}
                   aria-label={`Sign in to like ${lecturer.name}`}
                   className="flex min-h-11 min-w-11 items-center justify-center"
                 >

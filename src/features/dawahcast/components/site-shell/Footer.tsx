@@ -15,6 +15,20 @@ const APP_STORE_URL = "https://apps.apple.com/ng/app/dawahnigeria-app/id67591933
 type FooterLink = { text: string; href?: string };
 
 /**
+ * Auth routes are `force-dynamic` and have no `loading.tsx` anywhere in their
+ * segment chain. Next's default prefetch (`auto`) on a dynamic route fetches
+ * "the partial route down to the nearest segment with a loading boundary" —
+ * with no such boundary it returns nothing the router can reuse, so each
+ * prefetch is a wasted dynamic render on the Worker.
+ *
+ * This footer is on every page, so the Login/Signup entry was firing that
+ * request on every signed-out page view. Those aborted mid-flight on flaky
+ * mobile connections and surfaced as `Network connection lost.` in the Worker
+ * logs, triggered by `GET /auth/login?_rsc=…`.
+ */
+const AUTH_PREFIX = "/auth/";
+
+/**
  * Ported from CRA's `footer/Footer.jsx` + its four `footermodals` columns.
  *
  * CRA renders each column with a mobile accordion toggle; here the columns are
@@ -80,6 +94,12 @@ export function Footer() {
                     <Link
                       key={link.text}
                       href={link.href}
+                      // Only the auth links opt out — every other footer
+                      // destination is a static catalogue page that prefetches
+                      // usefully. See the note on AUTH_PREFIX above.
+                      prefetch={
+                        link.href.startsWith(AUTH_PREFIX) ? false : undefined
+                      }
                       className="text-[14px] text-color transition-colors hover:text-color-foreground dark:hover:text-[#ddff00]"
                     >
                       {link.text}
