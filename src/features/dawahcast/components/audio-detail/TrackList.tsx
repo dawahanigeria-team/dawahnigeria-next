@@ -71,8 +71,17 @@ export function TrackList({
             >
               <span className="text-sm tabular-nums text-color">{i + 1}</span>
 
-              <span className="min-w-0 truncate text-sm text-foreground">
-                {title}
+              <span className="min-w-0 text-sm text-foreground">
+                {id === undefined || id === null ? (
+                  <span className="block truncate">{title}</span>
+                ) : (
+                  <Link
+                    href={ROUTES.lecture(id)}
+                    className="block truncate hover:text-gray-400"
+                  >
+                    {title}
+                  </Link>
+                )}
               </span>
 
               <span className="hidden min-w-0 truncate text-[13px] text-color mobile-up:block">
