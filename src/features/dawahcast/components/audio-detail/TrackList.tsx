@@ -77,7 +77,14 @@ export function TrackList({
                 ) : (
                   <Link
                     href={ROUTES.lecture(id)}
-                    className="block truncate hover:text-gray-400"
+                    // Albums reach 100+ tracks, so the default viewport
+                    // prefetch would pull a lecture page per row to serve the
+                    // one a visitor actually opens.
+                    prefetch={false}
+                    // The cell truncates; the native tooltip keeps the full
+                    // title reachable.
+                    title={title}
+                    className="block truncate hover:underline focus-visible:underline"
                   >
                     {title}
                   </Link>
