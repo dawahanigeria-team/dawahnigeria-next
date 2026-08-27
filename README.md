@@ -75,7 +75,8 @@ precedence.
 | Command | What it does |
 | --- | --- |
 | `pnpm dev` | Start the development server on port 3000 |
-| `pnpm build` | Production build |
+| `pnpm build` | Production build, packaged for Cloudflare (writes `.open-next/`) |
+| `pnpm build:next` | Plain Next.js build only — faster, skips the Worker packaging |
 | `pnpm start` | Serve a production build locally |
 | `pnpm lint` | ESLint over the repository |
 | `pnpm typecheck` | `tsc --noEmit` |
@@ -137,29 +138,37 @@ credentials for anything in this repository.
 ### Cloudflare Workers Builds settings
 
 Settings that are easy to get wrong, because a plain Next.js configuration
-looks correct and fails only at deploy time. **Workers Builds keeps a separate
-configuration for non-production branches, and it does not inherit the
-production one** — both columns have to be set:
+looks correct and fails only at deploy time. Settings → Build holds one shared
+block; the production/non-production split is the **deploy vs version command**,
+not a second build command:
 
-| Setting | Production | Non-production branches |
+| Field | Value | Used by |
 | --- | --- | --- |
-| Build command | `pnpm cf:build` | `pnpm cf:build` |
-| Deploy command | `npx wrangler deploy` | `npx wrangler versions upload` |
+| Build command | `pnpm cf:build` | every branch |
+| Deploy command | `npx wrangler deploy` | production (`main`) |
+| Version command | `npx wrangler versions upload` | non-production branches |
+| Root directory | `/` | all |
 
-**Set the non-production build command too.** Leaving it at the default
-(`npm run build`) means every branch push builds green and then fails the
-upload with *"The directory specified by the `assets.directory` field in your
-configuration file does not exist: .open-next/assets"* — because `next build`
-never produces `.open-next/`. Production is unaffected, so this stays invisible
-until someone pushes a branch. It bit `seo-caching-and-mobile-fixes` on
-2026-08-17 and again on 2026-08-22.
+**The dashboard value and the executed command can diverge.** On 2026-08-27 the
+pane showed `pnpm cf:build` while the build log read `Executing user build
+command: pnpm run build`, which failed the upload with *"The directory specified
+by the `assets.directory` field in your configuration file does not exist:
+.open-next/assets"*. Earlier failures on 2026-08-17 and 2026-08-22 look like the
+same thing. If you hit this, re-save the Build configuration — a value edited but
+never persisted shows in the field while the stored one still runs.
 
-**The build command must be `cf:build`, not `build`.** `pnpm build` is plain
-`next build` and produces only `.next/`. The deploy step delegates to
-`opennextjs-cloudflare deploy`, which needs `.open-next/.build/open-next.config.mjs`
-— so a `build` command succeeds and then the deploy fails with *"Could not find
-compiled Open Next config"*. `cf:build` runs `next build` internally, so nothing
-is lost by using it.
+`pnpm build` is now `opennextjs-cloudflare build` precisely so this cannot break
+a deploy: whichever of `build` or `cf:build` the dashboard runs, `.open-next/`
+gets produced. Use `pnpm build:next` if you want the Next build alone.
+
+**Build with OpenNext, never bare `next build`.** The deploy step needs
+`.open-next/.build/open-next.config.mjs`, so a bare Next build succeeds and then
+fails with *"Could not find compiled Open Next config"*. It also picks the wrong
+bundler: Next 16 defaults to Turbopack, whose standalone output omits
+`server/instrumentation.js` while still listing it in the trace manifest, which
+kills OpenNext's file tracer — `open-next.config.ts` pins `next build --webpack`
+for that reason. Both `pnpm build` and `pnpm cf:build` go through OpenNext and
+run Next internally, so nothing is lost by using either.
 
 **Cloudflare has two separate variable panes and they are not interchangeable.**
 Settings → *Variables and secrets* binds values to the **running Worker**

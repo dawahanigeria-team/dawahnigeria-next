@@ -76,6 +76,9 @@ A production build is worth checking too, since some issues only surface there:
 pnpm build
 ```
 
+That runs the full Cloudflare packaging, which is what actually ships. For a
+quicker check while iterating, `pnpm build:next` runs the Next build alone.
+
 ## Code conventions
 
 - **TypeScript is strict.** Avoid `any`; prefer narrowing over casting.
