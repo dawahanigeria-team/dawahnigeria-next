@@ -22,6 +22,10 @@ export const ROUTES = {
   moreRecentlyViewed: "/dawahcast/more/recently-viewed",
   moreTrending: "/dawahcast/more/trending",
   moreRecommended: "/dawahcast/more/recommended",
+  // Special-feature groups have no stable id upstream, so the (encoded) group
+  // name is the route param.
+  moreFeature: (name: string) =>
+    `/dawahcast/more/feature/${encodeURIComponent(name)}`,
 
   charts: "/dawahcast/charts",
   search: "/dawahcast/search",
