@@ -16,10 +16,10 @@ import { useEffect } from "react";
  */
 export default function DawahcastError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     // Imported lazily, matching instrumentation.ts: a static `@sentry/nextjs`
@@ -51,7 +51,7 @@ export default function DawahcastError({
       <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"
-          onClick={reset}
+          onClick={() => retry()}
           className="rounded-full bg-[#ddff2b] px-5 py-2 text-sm font-semibold text-[#101010] transition-opacity hover:opacity-90"
         >
           Try again
