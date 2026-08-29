@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { unstable_cache } from "next/cache";
 import { env } from "@/lib/env";
 import { ROUTES } from "@/lib/routes";
 import {
@@ -31,6 +32,26 @@ import {
  *    as deep as is reasonable rather than publishing eleven listing pages and
  *    calling it done.
  */
+
+/**
+ * Built on request rather than at deploy time.
+ *
+ * The walk below is 112 upstream requests, and this was one of only two
+ * prerendered routes in the app - so it ran inside Next's 60s per-page build
+ * limit, against an API whose latency from the build region is nothing like
+ * ours. It exceeded that limit on all three attempts and failed the deploy.
+ * Prerendering it made every deploy depend on the catalogue API being fast,
+ * for a file no user waits on.
+ *
+ * The cost of moving it is one slow response per revalidation window, paid by
+ * a crawler rather than a person. `unstable_cache` rather than the route's own
+ * `revalidate` because a route can be dynamic or cached, not both: the work is
+ * cached here so the route itself can stay off the build.
+ */
+export const dynamic = "force-dynamic";
+
+/** A catalogue this size does not change meaningfully within a day. */
+const SITEMAP_TTL_SECONDS = 60 * 60 * 24;
 
 /** Page-based upstreams fail independently; one bad page must not empty a section. */
 async function walkPages<T>(
@@ -97,73 +118,83 @@ function lastModifiedOf(row: unknown): Date | undefined {
   return undefined;
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = env.siteUrl;
+const buildSitemap = unstable_cache(
+  async (): Promise<MetadataRoute.Sitemap> => {
+    const base = env.siteUrl;
 
-  const staticPaths = [
-    ROUTES.home,
-    ROUTES.trending,
-    ROUTES.new,
-    ROUTES.ramadan,
-    ROUTES.lecturers,
-    ROUTES.recitations,
-    ROUTES.videos,
-    ROUTES.playlists,
-    ROUTES.categories,
-    ROUTES.charts,
-    ROUTES.genres,
-    ROUTES.more,
-    ROUTES.moreRecent,
-    ROUTES.moreTrending,
-    ROUTES.moreRecommended,
-    ROUTES.privacy,
-    ROUTES.terms,
-  ];
+    const staticPaths = [
+      ROUTES.home,
+      ROUTES.trending,
+      ROUTES.new,
+      ROUTES.ramadan,
+      ROUTES.lecturers,
+      ROUTES.recitations,
+      ROUTES.videos,
+      ROUTES.playlists,
+      ROUTES.categories,
+      ROUTES.charts,
+      ROUTES.genres,
+      ROUTES.more,
+      ROUTES.moreRecent,
+      ROUTES.moreTrending,
+      ROUTES.moreRecommended,
+      ROUTES.privacy,
+      ROUTES.terms,
+    ];
 
-  const [lectures, lecturers, albums, playlists, categories] = await Promise.all([
-    walkPages(getNewLectures, LECTURE_PAGES),
-    walkPages(getLecturers, LECTURER_PAGES),
-    // Every Quran recitation on the site is an album, so leaving these out left
-    // the whole recitation catalogue reachable only by crawling listing pages.
-    walkPages(getRecitationAlbums, ALBUM_PAGES),
-    getPlaylists().catch(() => []),
-    getCategories(100).catch(() => []),
-  ]);
+    const [lectures, lecturers, albums, playlists, categories] = await Promise.all([
+      walkPages(getNewLectures, LECTURE_PAGES),
+      walkPages(getLecturers, LECTURER_PAGES),
+      // Every Quran recitation on the site is an album, so leaving these out left
+      // the whole recitation catalogue reachable only by crawling listing pages.
+      walkPages(getRecitationAlbums, ALBUM_PAGES),
+      getPlaylists().catch(() => []),
+      getCategories(100).catch(() => []),
+    ]);
 
-  return dedupe([
-    ...staticPaths.map((path) => ({
-      url: `${base}${path}`,
-      changeFrequency: "daily" as const,
-    })),
-    ...lectures.map((lecture) => ({
-      url: `${base}${ROUTES.lecture(lecture.nid ?? lecture.id)}`,
-      lastModified: lastModifiedOf(lecture),
-      changeFrequency: "weekly" as const,
-    })),
-    ...lecturers.map((lecturer) => ({
-      url: `${base}${ROUTES.resourcePerson(lecturer.id)}`,
-      changeFrequency: "weekly" as const,
-    })),
-    ...albums.map((album) => ({
-      url: `${base}${ROUTES.album(album.nid ?? album.id)}`,
-      changeFrequency: "weekly" as const,
-    })),
-    ...playlists
-      // 228 of the ~312 public playlists currently resolve to zero tracks — the
-      // detail page renders an empty track list for them on the live site too.
-      // Submitting those is submitting thin pages, which costs crawl budget and
-      // invites a soft-404 rather than earning an impression. They are still
-      // linked from /dawahcast/playlists, so nothing becomes unreachable; they
-      // simply stop being *advertised* until they have content. Drop this filter
-      // once the playlist-contents endpoint is fixed.
-      .filter((playlist) => playlist.trackCount > 0)
-      .map((playlist) => ({
-        url: `${base}${ROUTES.playlist(playlist.id)}`,
+    return dedupe([
+      ...staticPaths.map((path) => ({
+        url: `${base}${path}`,
+        changeFrequency: "daily" as const,
+      })),
+      ...lectures.map((lecture) => ({
+        url: `${base}${ROUTES.lecture(lecture.nid ?? lecture.id)}`,
+        lastModified: lastModifiedOf(lecture),
         changeFrequency: "weekly" as const,
       })),
-    ...categories.map((category) => ({
-      url: `${base}${ROUTES.category(category.id)}`,
-      changeFrequency: "weekly" as const,
-    })),
-  ]);
+      ...lecturers.map((lecturer) => ({
+        url: `${base}${ROUTES.resourcePerson(lecturer.id)}`,
+        changeFrequency: "weekly" as const,
+      })),
+      ...albums.map((album) => ({
+        url: `${base}${ROUTES.album(album.nid ?? album.id)}`,
+        changeFrequency: "weekly" as const,
+      })),
+      ...playlists
+        // 228 of the ~312 public playlists currently resolve to zero tracks — the
+        // detail page renders an empty track list for them on the live site too.
+        // Submitting those is submitting thin pages, which costs crawl budget and
+        // invites a soft-404 rather than earning an impression. They are still
+        // linked from /dawahcast/playlists, so nothing becomes unreachable; they
+        // simply stop being *advertised* until they have content. Drop this filter
+        // once the playlist-contents endpoint is fixed.
+        .filter((playlist) => playlist.trackCount > 0)
+        .map((playlist) => ({
+          url: `${base}${ROUTES.playlist(playlist.id)}`,
+          changeFrequency: "weekly" as const,
+        })),
+      ...categories.map((category) => ({
+        url: `${base}${ROUTES.category(category.id)}`,
+        changeFrequency: "weekly" as const,
+      })),
+    ]);
+  },
+  ["dawahcast-sitemap"],
+  // Keyed on nothing: there is one sitemap. The tag lets a catalogue import
+  // drop it early via revalidateTag instead of waiting out the window.
+  { revalidate: SITEMAP_TTL_SECONDS, tags: ["sitemap"] },
+);
+
+export default function sitemap(): Promise<MetadataRoute.Sitemap> {
+  return buildSitemap();
 }
