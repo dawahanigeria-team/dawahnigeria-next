@@ -38,9 +38,7 @@ export async function HeroSection() {
       <div className="relative z-10 flex flex-col gap-8">
         {/* Top Hero Discovery Hub */}
         <div className="max-w-3xl">
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl sm:leading-[1.15]">
-            Find & Download Islamic Lectures and Recitations
-          </h1>
+    
 
           <p className="mt-2 text-sm text-white/75 sm:text-base">
             Search hundreds of scholars, topics, and surahs in Hausa, Yoruba, English, Arabic, and more.
