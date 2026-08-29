@@ -38,9 +38,6 @@ export async function HeroSection() {
       <div className="relative z-10 flex flex-col gap-8">
         {/* Top Hero Discovery Hub */}
         <div className="max-w-3xl">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-dncolor-500/30 bg-dncolor-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-dncolor-500">
-          </div>
-
           <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl sm:leading-[1.15]">
             Find & Download Islamic Lectures and Recitations
           </h1>
