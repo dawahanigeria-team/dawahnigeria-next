@@ -18,7 +18,10 @@ import type { PlayerTrack } from "./types";
  * would force every route under it dynamic. So state is fetched per track from
  * the client, and only once something is actually playing.
  *
- * Download needs no session and renders for everyone, which matches CRA.
+ * Download renders for everyone too, but it is no longer session-free: the
+ * button opens a sign-in prompt for signed-out listeners, and the Server
+ * Action behind it refuses them. It stays visible because that prompt is how
+ * a signed-out listener finds out downloads exist.
  */
 export function TrackActions({ track }: { track: PlayerTrack }) {
   const [state, setState] = useState<PlayerTrackState | null>(null);

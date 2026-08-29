@@ -260,6 +260,11 @@ export type DownloadLinks = {
   amr_url?: string;
   mp3_size?: string;
   amr_size?: string;
+  /** Free downloads spent this calendar month. Absent for premium. */
+  download_count?: number;
+  free_download_limit?: number;
+  /** Downloads left this month; null when the plan is unlimited. */
+  downloads_remaining?: number | null;
 };
 
 /**
@@ -267,17 +272,27 @@ export type DownloadLinks = {
  *
  * The upstream returns a bare `"https:"` for formats it has no file for, so
  * callers must treat anything without a path as unavailable.
+ *
+ * Requires a signed-in user's bearer token: the endpoint refuses anonymous
+ * callers with 401 so the media URLs are never handed to a visitor we cannot
+ * attribute a download to. Resolving a lecture *is* the metered event upstream
+ * — it claims one of the caller's free monthly slots — so this is deliberately
+ * uncached: the response is per-user and per-call, and a shared cache entry
+ * would both leak one user's remaining count to another and let a second user
+ * download on the first user's claim.
+ *
+ * Throws `ApiError` rather than swallowing, so callers can tell 401
+ * (sign in) from 403 (allowance spent) from a genuine upstream failure.
  */
-export async function getDownloadLinks(lecid: string | number): Promise<DownloadLinks | null> {
-  try {
-    return await api.post<DownloadLinks>(
-      "/download_api.php",
-      { lecid: Number(lecid) },
-      { cache: { revalidate: 3600, tags: [`download:${lecid}`] } },
-    );
-  } catch {
-    return null;
-  }
+export async function getDownloadLinks(
+  lecid: string | number,
+  token: string,
+): Promise<DownloadLinks> {
+  return api.post<DownloadLinks>(
+    "/download_api.php",
+    { lecid: Number(lecid) },
+    { token, cache: { revalidate: false } },
+  );
 }
 
 export type NamedOption = { id: string | number; name: string };
