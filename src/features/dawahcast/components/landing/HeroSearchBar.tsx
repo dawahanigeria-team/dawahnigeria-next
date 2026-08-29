@@ -8,11 +8,9 @@ import { trackSearch } from "@/features/analytics/posthog";
 
 const POPULAR_TAGS = [
   { label: "Sheikh Albani Zaria", query: "Albani" },
-  { label: "Sheikh Dahiru Bauchi", query: "Dahiru Bauchi" },
   { label: "Tafseer", query: "Tafseer" },
   { label: "Dr. Isa Pantami", query: "Pantami" },
   { label: "Sheikh Aminu Daurawa", query: "Daurawa" },
-  { label: "Mufti Menk", query: "Menk" },
   { label: "Quran Recitation", query: "Quran" },
   { label: "Ramadan", query: "Ramadan" },
 ];
