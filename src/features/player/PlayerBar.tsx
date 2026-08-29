@@ -16,6 +16,7 @@ import { PlaybackRateMenu } from "./PlaybackRateMenu";
 import { RepeatButton } from "./RepeatButton";
 import { ShareButton } from "./ShareButton";
 import { TrackActions } from "./TrackActions";
+import { DownloadButton } from "@/features/dawahcast/components/DownloadButton";
 
 function fmtTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
@@ -72,44 +73,55 @@ export function PlayerBar({ audioRef }: Props) {
       {/* Full-bleed, as CRA's bar is: the title gets the width it needs instead
           of being ellipsized inside a centred 1024px column. */}
       <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-muted">
-            {track.image ? (
-              <Image
-                src={track.image}
-                alt=""
-                fill
-                sizes="40px"
-                className="object-cover"
-              />
-            ) : null}
-          </div>
-          <div className="min-w-0 flex-1">
-            {track.href ? (
-              <Link
-                href={track.href}
-                className="block truncate text-sm font-medium text-foreground hover:underline"
-              >
-                {track.title}
-              </Link>
-            ) : (
-              <p className="truncate text-sm font-medium text-foreground">
-                {track.title}
-              </p>
-            )}
-            {/* Replaces the lecturer line rather than adding a row: the bar is
-                fixed-height and a phone has no space for both. */}
-            {error ? (
-              <p role="status" className="truncate text-xs text-[#ff9d9d]">
-                {error}
-              </p>
-            ) : (
-              track.lecturer && (
-                <p className="truncate text-xs text-muted-foreground">
-                  {track.lecturer}
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded bg-muted">
+              {track.image ? (
+                <Image
+                  src={track.image}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              ) : null}
+            </div>
+            <div className="min-w-0 flex-1">
+              {track.href ? (
+                <Link
+                  href={track.href}
+                  className="block truncate text-sm font-medium text-foreground hover:underline"
+                >
+                  {track.title}
+                </Link>
+              ) : (
+                <p className="truncate text-sm font-medium text-foreground">
+                  {track.title}
                 </p>
-              )
-            )}
+              )}
+              {/* Replaces the lecturer line rather than adding a row: the bar is
+                  fixed-height and a phone has no space for both. */}
+              {error ? (
+                <p role="status" className="truncate text-xs text-[#ff9d9d]">
+                  {error}
+                </p>
+              ) : (
+                track.lecturer && (
+                  <p className="truncate text-xs text-muted-foreground">
+                    {track.lecturer}
+                  </p>
+                )
+              )}
+            </div>
+          </div>
+
+          {/* Quick download button right in the active mobile player bar */}
+          <div className="flex shrink-0 items-center sm:hidden">
+            <DownloadButton
+              lectureId={track.id}
+              title={track.title}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-color hover:text-foreground active:scale-95"
+            />
           </div>
         </div>
 

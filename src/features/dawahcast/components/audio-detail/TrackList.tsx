@@ -4,6 +4,7 @@ import { toPlayerTrack, toPlayerQueue } from "@/features/player/toPlayerTrack";
 import { FavoriteButton } from "@/features/favorites/FavoriteButton";
 import { AddToPlaylistMenu } from "@/features/library/AddToPlaylistMenu";
 import { RemoveFromPlaylistButton } from "@/features/library/RemoveFromPlaylistButton";
+import { DownloadButton } from "../DownloadButton";
 import { formatTrackDuration } from "../../albumPlayback";
 import { ROUTES } from "@/lib/routes";
 import type { UserPlaylist } from "@/features/library/server";
@@ -128,6 +129,11 @@ export function TrackList({
                     label={title}
                   />
                 )}
+                <DownloadButton
+                  lectureId={idStr}
+                  title={title}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-full text-color hover:text-foreground active:scale-95"
+                />
                 <span className="hidden min-w-[4.5rem] text-right text-[13px] tabular-nums text-color mobile-up:inline">
                   {duration}
                 </span>

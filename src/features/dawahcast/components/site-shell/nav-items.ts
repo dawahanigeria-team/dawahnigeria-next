@@ -2,11 +2,12 @@ import type { IconType } from "react-icons";
 import { FaHome, FaQuran } from "react-icons/fa";
 import { AiOutlineLineChart } from "react-icons/ai";
 import { ImMusic } from "react-icons/im";
-import { MdPerson, MdFavorite, MdDownload } from "react-icons/md";
+import { MdPerson, MdFavorite } from "react-icons/md";
 import { TiChartBar } from "react-icons/ti";
 import { CgUserList } from "react-icons/cg";
 import { SiApplemusic } from "react-icons/si";
 import { BsMoonStarsFill, BsYoutube, BsMusicNoteList, BsFileEarmarkMusicFill, BsFillDiscFill } from "react-icons/bs";
+import { FiSearch } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
 
 export type NavItem = {
@@ -38,12 +39,12 @@ export const LIBRARY_NAV: NavItem[] = [
   { name: "My Playlist", href: ROUTES.myplaylist, icon: CgUserList, matchAs: "prefix" },
 ];
 
-// CRA's `.layout_buttom_menue2`: Home / Library / Favorites / Download.
+// Mobile bottom bar: Home / Search / Lecturers / Library
 export const BOTTOM_NAV: NavItem[] = [
   { name: "Home", href: ROUTES.home, icon: FaHome },
+  { name: "Search", href: ROUTES.search, icon: FiSearch, matchAs: "prefix" },
+  { name: "Lecturers", href: ROUTES.lecturers, icon: MdPerson, matchAs: "prefix" },
   { name: "Library", href: ROUTES.library, icon: SiApplemusic, matchAs: "prefix" },
-  { name: "Favorites", href: ROUTES.favourite, icon: MdFavorite, matchAs: "prefix" },
-  { name: "Download", href: ROUTES.download, icon: MdDownload, matchAs: "prefix" },
 ];
 
 export function isActive(pathname: string, item: NavItem): boolean {

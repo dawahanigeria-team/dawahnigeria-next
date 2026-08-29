@@ -81,35 +81,45 @@ export function LectureTableRow({
     >
       <div className="grid grid-cols-1 items-center gap-4 py-3 pl-3 pr-2 mobile-up:grid-cols-[35%_1fr_auto]">
         {/* # + thumbnail + title/stats */}
-        <div className="flex min-w-0 items-center gap-3">
-          <RowPlayControl track={lectureToPlayerTrack(lecture)} index={index} />
-          <Link
-            href={ROUTES.lecture(l.id)}
-            className="relative h-[43px] w-[43px] shrink-0 overflow-hidden rounded-[3px] bg-muted"
-          >
-            {l.image && (
-              <Image
-                src={l.image}
-                alt=""
-                fill
-                sizes="43px"
-                className="object-cover"
-              />
-            )}
-          </Link>
-          <div className="flex min-w-0 flex-col items-start">
+        <div className="flex min-w-0 items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <RowPlayControl track={lectureToPlayerTrack(lecture)} index={index} />
             <Link
               href={ROUTES.lecture(l.id)}
-              className="mb-[3px] line-clamp-1 text-[14px] text-foreground hover:text-gray-400"
+              className="relative h-[43px] w-[43px] shrink-0 overflow-hidden rounded-[3px] bg-muted"
             >
-              {l.title}
+              {l.image && (
+                <Image
+                  src={l.image}
+                  alt=""
+                  fill
+                  sizes="43px"
+                  className="object-cover"
+                />
+              )}
             </Link>
-            <div className="flex flex-row flex-wrap items-center gap-3 text-color">
-              <Stat icon={<FiEye />} value={l.views} label="views" />
-              <Stat icon={<MdFavorite />} value={l.favorites} label="favourites" />
-              <Stat icon={<IoShareSocialOutline />} value={l.shares} label="shares" />
-              <Stat icon={<IoChatbubbleOutline />} value={l.comments} label="comments" />
+            <div className="flex min-w-0 flex-col items-start">
+              <Link
+                href={ROUTES.lecture(l.id)}
+                className="mb-[3px] line-clamp-1 text-[14px] text-foreground hover:text-gray-400"
+              >
+                {l.title}
+              </Link>
+              <div className="flex flex-row flex-wrap items-center gap-3 text-color">
+                <Stat icon={<FiEye />} value={l.views} label="views" />
+                <Stat icon={<MdFavorite />} value={l.favorites} label="favourites" />
+                <Stat icon={<IoShareSocialOutline />} value={l.shares} label="shares" />
+                <Stat icon={<IoChatbubbleOutline />} value={l.comments} label="comments" />
+              </div>
             </div>
+          </div>
+          {/* Quick download on mobile */}
+          <div className="flex shrink-0 items-center mobile-up:hidden">
+            <DownloadButton
+              lectureId={String(l.id)}
+              title={l.title}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-color transition-colors hover:text-foreground active:scale-95"
+            />
           </div>
         </div>
 

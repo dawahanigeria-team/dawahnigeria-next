@@ -12,49 +12,40 @@ import {
 } from "react-icons/md";
 import { ROUTES } from "@/lib/routes";
 
-/**
- * "Browse" quick links, mobile only.
- *
- * CRA renders this as a react-slick row (`OPTIONS_SLIDER_SETTINGS`,
- * `slidesToShow: 6`) behind the same `isMobile` check as the hero, so it never
- * appears above 615px — `.landing_options` and `.landing_browse_heading` are
- * both `display: none` until the mobile media query. The order here is CRA's.
- *
- * Slick is only a horizontal scroller at this size (its arrows are hidden), so
- * this is a plain overflow row rather than a carousel. CRA's icons are PNG
- * assets; these are the react-icons equivalents the rest of the app already
- * uses, keeping the 43px lime disc and 12px label from `landop.scss`.
- */
 const ITEMS = [
-  { label: "Library", href: ROUTES.library, Icon: MdLibraryMusic },
-  { label: "Charts", href: ROUTES.charts, Icon: MdBarChart },
   { label: "Lecturers", href: ROUTES.lecturers, Icon: MdPerson },
   { label: "Quran", href: ROUTES.recitations, Icon: MdMenuBook },
-  { label: "Playlists", href: ROUTES.playlists, Icon: MdQueueMusic },
-  { label: "Video", href: ROUTES.videos, Icon: MdPlayCircleFilled },
   { label: "Categories", href: ROUTES.categories, Icon: MdGridView },
   { label: "Trending", href: ROUTES.trending, Icon: MdTrendingUp },
   { label: "New", href: ROUTES.new, Icon: MdFiberNew },
+  { label: "Playlists", href: ROUTES.playlists, Icon: MdQueueMusic },
+  { label: "Videos", href: ROUTES.videos, Icon: MdPlayCircleFilled },
+  { label: "Charts", href: ROUTES.charts, Icon: MdBarChart },
+  { label: "Library", href: ROUTES.library, Icon: MdLibraryMusic },
 ];
 
 export function BrowseRow() {
   return (
-    <section className="mb-8 hidden mobile:block" aria-label="Browse">
-      <h2 className="mb-2 ml-1 text-base font-semibold text-color-primary">
-        Browse
-      </h2>
-      <ul className="no-scrollbar flex gap-4 overflow-x-auto pb-1">
+    <section className="mb-6 sm:mb-8" aria-label="Quick Browse Categories">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-base font-semibold text-color-primary sm:text-lg">
+          Explore by Category
+        </h2>
+      </div>
+      <ul className="no-scrollbar flex gap-3 overflow-x-auto pb-1 sm:gap-4">
         {ITEMS.map(({ label, href, Icon }) => (
           <li key={label} className="shrink-0">
             <Link
               href={href}
               aria-label={`Go to ${label}`}
-              className="flex w-[58px] flex-col items-center gap-1.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dncolor-500"
+              className="group flex flex-col items-center gap-1.5 rounded-xl p-1 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-dncolor-500 sm:w-[72px]"
             >
-              <span className="grid h-[43px] w-[43px] place-items-center rounded-full bg-dncolor-500 text-[#0d0d0d]">
-                <Icon className="h-[22px] w-[22px]" aria-hidden />
+              <span className="grid h-[44px] w-[44px] place-items-center rounded-2xl bg-dncolor-500/15 text-dncolor-500 transition-colors group-hover:bg-dncolor-500 group-hover:text-black sm:h-[50px] sm:w-[50px]">
+                <Icon className="h-6 w-6" aria-hidden />
               </span>
-              <span className="text-center text-[12px] text-color">{label}</span>
+              <span className="text-center text-[11px] font-medium text-color transition-colors group-hover:text-foreground sm:text-xs">
+                {label}
+              </span>
             </Link>
           </li>
         ))}

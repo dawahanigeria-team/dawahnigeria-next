@@ -51,13 +51,8 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Desktop/tablet search: fixed basis, centred by auto margins. */}
-        <div className="mx-auto max-w-[450px] flex-[0_1_350px] mobile:hidden">
-          <SearchBar />
-        </div>
-
-        {/* ≤615px gets a narrower inline field instead. */}
-        <div className="hidden max-w-[200px] flex-auto mobile:flex mobile:items-center">
+        {/* Search bar container: flexible and responsive */}
+        <div className="mx-auto flex min-w-0 flex-1 max-w-[480px] items-center px-1">
           <SearchBar />
         </div>
 

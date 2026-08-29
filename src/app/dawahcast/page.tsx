@@ -4,6 +4,7 @@ import { HeroSection } from "@/features/dawahcast/components/landing/HeroSection
 import { BrowseRow } from "@/features/dawahcast/components/landing/BrowseRow";
 import { LeaderboardCta } from "@/features/dawahcast/components/landing/LeaderboardCta";
 import { TrendingSection } from "@/features/dawahcast/components/landing/TrendingSection";
+import { FeaturedScholarsSection } from "@/features/dawahcast/components/landing/FeaturedScholarsSection";
 import { RecentlyPostedSection } from "@/features/dawahcast/components/landing/RecentlyPostedSection";
 import { RecentlyViewedSection } from "@/features/dawahcast/components/landing/RecentlyViewedSection";
 import { SpecialFeaturesSection } from "@/features/dawahcast/components/landing/SpecialFeaturesSection";
@@ -68,14 +69,17 @@ export default function DawahcastHomePage() {
         <HeroSection />
       </Suspense>
 
-      {/* Both are mobile-only on the live site, sitting between the hero and the
-          language chips. They render nothing above 615px. */}
+      {/* Category quick navigation */}
       <BrowseRow />
-      <LeaderboardCta />
 
       {/* Language chips + trending — the first content row on the live site. */}
       <Suspense fallback={<LectureRowSkeleton />}>
         <TrendingSection />
+      </Suspense>
+
+      {/* Top scholars & resource persons visual spotlight */}
+      <Suspense fallback={<LectureRowSkeleton />}>
+        <FeaturedScholarsSection />
       </Suspense>
 
       <Suspense fallback={<LectureRowSkeleton />}>
@@ -96,6 +100,9 @@ export default function DawahcastHomePage() {
       >
         <SpecialFeaturesSection />
       </Suspense>
+
+      {/* Community listening CTA */}
+      <LeaderboardCta />
     </div>
   );
 }

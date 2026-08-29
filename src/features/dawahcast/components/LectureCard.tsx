@@ -3,6 +3,7 @@ import Image from "next/image";
 import { FiEye } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
 import { PlayButton } from "@/features/player/PlayButton";
+import { DownloadButton } from "./DownloadButton";
 import { lectureToPlayerTrack } from "@/features/player/toPlayerTrack";
 import type { PlayerTrack } from "@/features/player/types";
 import type { LectureSummary } from "../server/landing";
@@ -73,13 +74,17 @@ export function LectureCard({
             <span>{views}</span>
           </div>
         )}
-        {playerTrack && (
-          // Always visible below 615px — a touch screen has no hover, so a
-          // hover-only control would be unreachable for most of the audience.
-          <div className="absolute bottom-2 right-2 z-10 opacity-100 transition-opacity mobile-up:opacity-0 mobile-up:group-hover:opacity-100 mobile-up:group-focus-within:opacity-100">
+        {/* Quick action buttons (Download + Play) */}
+        <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 opacity-100 transition-opacity mobile-up:opacity-0 mobile-up:group-hover:opacity-100 mobile-up:group-focus-within:opacity-100">
+          <DownloadButton
+            lectureId={String(id)}
+            title={title}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-all hover:bg-black/90 hover:scale-105"
+          />
+          {playerTrack && (
             <PlayButton track={playerTrack} queue={queue} variant="round" />
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <div className="px-0.5">
         <Link

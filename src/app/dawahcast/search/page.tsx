@@ -175,7 +175,57 @@ export default async function SearchPage({
         </div>
       )}
 
-      {/* Facets live in the sidebar on this route (see SideNav), matching live. */}
+      {/* Mobile in-page facet chips (hidden on desktop where sidebar facets render) */}
+      {(facets.lang.length > 0 || facets.rp.length > 0 || facets.cat.length > 0) && (
+        <div className="mt-4 flex flex-col gap-2 tab-up:hidden">
+          {facets.lang.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="shrink-0 text-xs font-semibold text-color">Language:</span>
+              {facets.lang.map((f) => {
+                const on = filters.lang.includes(f.id);
+                return (
+                  <Link
+                    key={`mob-lang-${f.id}`}
+                    href={toggleHref("lang", f.id)}
+                    className={[
+                      "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                      on
+                        ? "border-dncolor-500 bg-dncolor-500 font-semibold text-black"
+                        : "border-border bg-muted/60 text-foreground hover:bg-muted",
+                    ].join(" ")}
+                  >
+                    {f.name} ({f.count})
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+          {facets.rp.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <span className="shrink-0 text-xs font-semibold text-color">Lecturer:</span>
+              {facets.rp.slice(0, 8).map((f) => {
+                const on = filters.rp.includes(f.id);
+                return (
+                  <Link
+                    key={`mob-rp-${f.id}`}
+                    href={toggleHref("rp", f.id)}
+                    className={[
+                      "shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                      on
+                        ? "border-dncolor-500 bg-dncolor-500 font-semibold text-black"
+                        : "border-border bg-muted/60 text-foreground hover:bg-muted",
+                    ].join(" ")}
+                  >
+                    {f.name} ({f.count})
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Results listing */}
       <div className="mt-4">
         <div>
           {results.length === 0 ? (
