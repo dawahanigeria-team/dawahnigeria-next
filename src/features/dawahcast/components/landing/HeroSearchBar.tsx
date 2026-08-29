@@ -46,7 +46,7 @@ export function HeroSearchBar() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search 100,000+ lectures, scholars, surahs, or topics..."
+          placeholder="Search 300,000+ lectures, scholars, surahs, or topics..."
           aria-label="Search DawahCast catalog"
           className="min-h-[44px] min-w-0 flex-1 bg-transparent pr-2 text-base font-medium text-white placeholder-white/50 outline-none sm:text-lg [&::-webkit-search-cancel-button]:hidden"
         />
