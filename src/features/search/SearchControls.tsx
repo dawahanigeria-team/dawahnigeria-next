@@ -14,9 +14,12 @@ export function SearchControls({
   initialQuery,
   sort,
   filters,
+  autoFocus = false,
 }: {
   initialQuery: string;
   sort: SearchSort;
+  /** Focus the field on mount. Set on the empty search page, whose only job is this input. */
+  autoFocus?: boolean;
   /** Active facet selections, so the controls can carry them across a re-query. */
   filters: SearchFilterState;
 }) {
@@ -64,6 +67,7 @@ export function SearchControls({
             onChange={(e) => setValue(e.target.value)}
             placeholder="Search lecturers, lectures, albums…"
             aria-label="Search query"
+            autoFocus={autoFocus}
             className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -75,6 +79,9 @@ export function SearchControls({
         </button>
       </form>
 
+      {/* Nothing to order until there are results, and offering it first
+          implies the page is already showing some. */}
+      {initialQuery ? (
       <label className="flex items-center gap-2 rounded-lg border border-border px-3 py-2">
         <span className="text-xs text-muted-foreground">Sort:</span>
         <select
@@ -88,6 +95,7 @@ export function SearchControls({
           <option value="oldest">Oldest first</option>
         </select>
       </label>
+      ) : null}
     </div>
   );
 }

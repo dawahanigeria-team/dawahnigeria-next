@@ -40,6 +40,26 @@ export async function generateMetadata({
 const FILTER_KEYS = ["lang", "rp", "cat", "album"] as const;
 type FilterKey = (typeof FILTER_KEYS)[number];
 
+/**
+ * What the page offers before a query exists.
+ *
+ * The empty state used to be one centred line restating the placeholder, which
+ * gave a visitor nothing to do and nothing to click. These are the sections the
+ * sidebar already exposes, so nothing new is fetched and there is no new way
+ * for this page to fail - it just stops being a dead end.
+ */
+const BROWSE_LINKS: ReadonlyArray<{ label: string; href: string }> = [
+  { label: "Categories", href: ROUTES.categories },
+  { label: "Lecturers", href: ROUTES.lecturers },
+  { label: "Albums", href: ROUTES.recitations },
+  { label: "Playlists", href: ROUTES.playlists },
+  { label: "Trending", href: ROUTES.trending },
+  { label: "New", href: ROUTES.new },
+];
+
+/** Seeded queries, not a live ranking: they run the real search rather than pretend to. */
+const SUGGESTED_TOPICS = ["Aqeedah", "Tafsir", "Ramadan", "Fiqh", "Seerah", "Hadith"];
+
 function parseSort(v: string | undefined): SearchSort {
   return v === "newest" || v === "oldest" ? v : "relevance";
 }
@@ -103,11 +123,40 @@ export default async function SearchPage({
         <PageHeaderRouter title="Search" />
         <h1 className="text-2xl font-semibold text-foreground">Search</h1>
         <div className="mt-4">
-          <SearchControls initialQuery="" sort={sort} filters={filters} />
+          <SearchControls initialQuery="" sort={sort} filters={filters} autoFocus />
         </div>
-        <p className="mt-12 text-center text-sm text-muted-foreground">
-          Search for lectures, albums, lecturers, and more.
-        </p>
+
+        <section className="mt-10">
+          <h2 className="text-sm font-semibold text-foreground">Browse</h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {BROWSE_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="inline-flex rounded-full border border-border px-4 py-2 text-sm text-foreground hover:border-primary hover:text-primary"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="mt-8">
+          <h2 className="text-sm font-semibold text-foreground">Popular topics</h2>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {SUGGESTED_TOPICS.map((topic) => (
+              <li key={topic}>
+                <Link
+                  href={`${ROUTES.search}?query=${encodeURIComponent(topic)}`}
+                  className="inline-flex rounded-full bg-search px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {topic}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
@@ -13,7 +13,14 @@ import { trackSearch } from "@/features/analytics/posthog";
  */
 export function SearchBar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [value, setValue] = useState("");
+
+  // The search page renders its own, larger, focused input. Two boxes with
+  // near-identical placeholders left people unsure which one was live - and
+  // this one is the brighter of the two, so the eye went to the box that is
+  // not what that page is for.
+  if (pathname === ROUTES.search) return null;
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
