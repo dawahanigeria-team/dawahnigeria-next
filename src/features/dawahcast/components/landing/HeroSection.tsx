@@ -39,12 +39,10 @@ export async function HeroSection() {
         {/* Top Hero Discovery Hub */}
         <div className="max-w-3xl">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-dncolor-500/30 bg-dncolor-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-dncolor-500">
-            <FiRadio className="animate-pulse" aria-hidden />
-            <span>DawahCast • 300,000+ Free Audio Files</span>
           </div>
 
           <h1 className="text-2xl font-bold tracking-tight text-white sm:text-4xl sm:leading-[1.15]">
-            Find & Download Islamic Lectures, Recitations & Podcasts
+            Find & Download Islamic Lectures and Recitations
           </h1>
 
           <p className="mt-2 text-sm text-white/75 sm:text-base">
