@@ -7,10 +7,7 @@ import { ROUTES } from "@/lib/routes";
 import { trackSearch } from "@/features/analytics/posthog";
 
 const POPULAR_TAGS = [
-  { label: "Sheikh Albani Zaria", query: "Albani" },
   { label: "Tafseer", query: "Tafseer" },
-  { label: "Dr. Isa Pantami", query: "Pantami" },
-  { label: "Sheikh Aminu Daurawa", query: "Daurawa" },
   { label: "Quran Recitation", query: "Quran" },
   { label: "Ramadan", query: "Ramadan" },
 ];
