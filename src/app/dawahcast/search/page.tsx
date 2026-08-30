@@ -121,7 +121,14 @@ export default async function SearchPage({
     return (
       <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
         <PageHeaderRouter title="Search" />
-        <h1 className="text-2xl font-semibold text-foreground">Search</h1>
+        {/* Below 600px PageHeaderRouter already renders "Search" as the bar title,
+            and this repeated it directly underneath - two headings plus the submit
+            button put the word on screen three times within the 242px above the
+            input, on a 664px viewport. Same breakpoint as the router's own
+            hroute-up:hidden, so exactly one of the two shows at any width. */}
+        <h1 className="hidden text-2xl font-semibold text-foreground hroute-up:block">
+          Search
+        </h1>
         <div className="mt-4">
           <SearchControls initialQuery="" sort={sort} filters={filters} autoFocus />
         </div>
@@ -182,7 +189,14 @@ export default async function SearchPage({
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
       <PageHeaderRouter title="Search" />
-      <h1 className="text-2xl font-semibold text-foreground">Search</h1>
+      {/* Below 600px PageHeaderRouter already renders "Search" as the bar title,
+          and this repeated it directly underneath - two headings plus the submit
+          button put the word on screen three times within the 242px above the
+          input, on a 664px viewport. Same breakpoint as the router's own
+          hroute-up:hidden, so exactly one of the two shows at any width. */}
+      <h1 className="hidden text-2xl font-semibold text-foreground hroute-up:block">
+        Search
+      </h1>
 
       <div className="mt-4">
         <SearchControls initialQuery={query} sort={sort} filters={filters} />
