@@ -19,7 +19,7 @@
     "@react-oauth/google": "^0.13.5",
     "@sentry/nextjs": "^10.69.0",
     "next": "^16.3.0",
-    "posthog-js": "^1.414.0",
+    "posthog-js": "^1.422.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-icons": "^5.4.0",
