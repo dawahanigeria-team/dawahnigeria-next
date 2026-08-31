@@ -79,22 +79,46 @@ function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
 }
 
 /**
- * GET /all_rps_api.php?offset=30&lim=10&page={page}[&state=…]
+ * GET /all_rps_api.php?lim=10&page={page}[&state=…]&meta=1
  */
+export type LecturerPage = {
+  items: LecturerListItem[];
+  /**
+   * How many scholars match the current filter in total, not how many this page
+   * carried. Showing the loaded count is what made the apps read as though the
+   * catalogue were 10 or 20 people deep.
+   */
+  total: number;
+};
+
 export async function getLecturers(
   page = 1,
   state?: string,
-): Promise<LecturerListItem[]> {
-  const query = state
-    ? `offset=30&lim=10&page=${page}&state=${encodeURIComponent(state)}`
-    : `offset=30&lim=10&page=${page}`;
-  const list = await api.get<LecturerListRaw[]>(`/all_rps_api.php?${query}`, {
-    cache: {
-      revalidate: 600,
-      tags: [`lecturers:${state ?? "all"}:p${page}`],
+): Promise<LecturerPage> {
+  const base = state
+    ? `lim=10&page=${page}&state=${encodeURIComponent(state)}`
+    : `lim=10&page=${page}`;
+  // `meta=1` asks for the paginated envelope, which carries the catalogue total
+  // in the body. The total also rides on an X-Total-Count header, but a header
+  // is lost the moment a response is served from cache.
+  const res = await api.get<LecturerListRaw[] | { data: LecturerListRaw[]; total: number }>(
+    `/all_rps_api.php?${base}&meta=1`,
+    {
+      cache: {
+        revalidate: 600,
+        tags: [`lecturers:${state ?? "all"}:p${page}`],
+      },
     },
-  });
-  return toLecturerItems(list);
+  );
+
+  // An older upstream answers with a bare array and no total; fall back to the
+  // page length rather than inventing a number.
+  const list = Array.isArray(res) ? res : (res?.data ?? []);
+  const items = toLecturerItems(list);
+  const total =
+    !Array.isArray(res) && typeof res?.total === "number" ? res.total : items.length;
+
+  return { items, total };
 }
 
 /** Lightweight catalogue used only by the account preference picker. */

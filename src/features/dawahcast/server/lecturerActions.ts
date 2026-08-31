@@ -1,6 +1,10 @@
 "use server";
 
-import { getLecturerById, getLecturers, type LecturerListItem } from "./listings";
+import {
+  getLecturerById,
+  getLecturers,
+  type LecturerPage,
+} from "./listings";
 
 /**
  * Re-fetches the lecturer grid for a chip selection.
@@ -17,13 +21,16 @@ export async function fetchLecturers({
   lecturerId?: number | null;
   state?: string;
   page?: number;
-}): Promise<LecturerListItem[]> {
+}): Promise<LecturerPage> {
   try {
     if (lecturerId !== null && lecturerId !== undefined) {
-      return await getLecturerById(lecturerId);
+      // A single scholar looked up by id: the total is however many that lookup
+      // returned, not the size of the catalogue.
+      const items = await getLecturerById(lecturerId);
+      return { items, total: items.length };
     }
     return await getLecturers(page, state || undefined);
   } catch {
-    return [];
+    return { items: [], total: 0 };
   }
 }

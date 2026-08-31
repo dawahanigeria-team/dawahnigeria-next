@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 
 export default async function LecturersPage() {
   // Independent loads — run them together rather than in series.
-  const [lecturers, states] = await Promise.all([getLecturers(1), getStates()]);
+  const [lecturerPage, states] = await Promise.all([getLecturers(1), getStates()]);
+  const lecturers = lecturerPage.items;
 
   return (
     <div className="flex w-full flex-col px-[3%] pb-16 pt-8">
@@ -29,7 +30,11 @@ export default async function LecturersPage() {
         }))}
       />
       <PageHeaderRouter title="Lecturer" />
-      <LecturerBrowser initialLecturers={lecturers} states={states} />
+      <LecturerBrowser
+        initialLecturers={lecturers}
+        initialTotal={lecturerPage.total}
+        states={states}
+      />
     </div>
   );
 }
