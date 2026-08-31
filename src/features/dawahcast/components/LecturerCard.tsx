@@ -10,9 +10,9 @@ export function LecturerCard({ lecturer }: { lecturer: LecturerListItem }) {
       className="group flex flex-col items-center gap-2 text-center"
     >
       <div className="relative h-24 w-24 overflow-hidden rounded-full bg-muted transition-transform group-hover:scale-105 sm:h-32 sm:w-32">
-        {lecturer.image ? (
+        {lecturer.avatar || lecturer.image ? (
           <Image
-            src={lecturer.image}
+            src={(lecturer.avatar || lecturer.image) as string}
             alt={lecturer.name}
             fill
             sizes="(min-width: 640px) 128px, 96px"

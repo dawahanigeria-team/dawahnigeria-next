@@ -47,7 +47,17 @@ export async function getNewLectures(page = 1): Promise<LectureSummary[]> {
 export type LecturerListItem = {
   id: string | number;
   name: string;
+  /**
+   * Full-size original. Keep using it where the image is displayed large or
+   * shared (OG cards); it can be 2000x1200 and several hundred KB.
+   */
   image: string | undefined;
+  /**
+   * 256x256 derivative, ~13KB, for the small circular avatars. Undefined for the
+   * handful of scholars whose source image is missing upstream, so callers
+   * should fall back to `image`.
+   */
+  avatar: string | undefined;
   raw: Record<string, unknown>;
 };
 
@@ -58,6 +68,7 @@ type LecturerListRaw = Record<string, unknown> & {
   name?: string;
   img?: string;
   image?: string;
+  rp_avatar?: string;
 };
 
 function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
@@ -65,6 +76,7 @@ function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
     id: (raw.nid ?? raw.id) as string | number,
     name: (raw.rpname || raw.name || "Unknown lecturer") as string,
     image: (raw.img || raw.image) as string | undefined,
+    avatar: raw.rp_avatar as string | undefined,
     raw,
   }));
 }

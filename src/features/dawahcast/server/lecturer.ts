@@ -4,7 +4,10 @@ import type { LectureSummary } from "./landing";
 export type Lecturer = {
   id: string | number;
   name: string;
+  /** Full-size original — used for OG/social cards, which want a large image. */
   image: string | undefined;
+  /** 256x256 derivative (~13KB) for the on-page avatar. */
+  avatar: string | undefined;
   bio: string | undefined;
   /** Totals the API reports directly — the tab labels use these, not page sizes. */
   totalAudio: number;
@@ -28,6 +31,7 @@ type LecturerRaw = Record<string, unknown> & {
   name?: string;
   img?: string;
   image?: string;
+  rp_avatar?: string;
   description?: string;
   bio?: string;
 };
@@ -37,6 +41,7 @@ function pickLecturer(raw: LecturerRaw): Lecturer {
     id: (raw.nid ?? raw.id) as string | number,
     name: (raw.rpname || raw.name || "Unknown lecturer") as string,
     image: (raw.img || raw.image) as string | undefined,
+    avatar: raw.rp_avatar as string | undefined,
     bio: (raw.description || raw.bio) as string | undefined,
     totalAudio: toNum(raw.total_audio),
     totalAlbums: toNum(raw.total_albums),
