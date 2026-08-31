@@ -1,0 +1,113 @@
+name: Bug report
+description: Something in the Next.js frontend behaves incorrectly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file this.
+
+        **Found a security vulnerability?** Do not file it here — follow the
+        [Security Policy](https://github.com/dawahanigeria-team/dawahnigeria-next/blob/main/SECURITY.md)
+        instead. Note that `API_PROJECT_ID`, the Google **client** id and any
+        `NEXT_PUBLIC_*` value are public by design and are not vulnerabilities.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did you see this?
+      description: >-
+        There are two frontends. dawahnigeria.com is currently served by the
+        older CRA app; this repository is the Next.js rewrite that will replace
+        it. Bugs on the live site usually need fixing in dawahnigeria-web.
+      options:
+        - Running this repository locally
+        - A preview deployment of this repository
+        - The live site at dawahnigeria.com
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1. Go to route `/...`
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: route
+    attributes:
+      label: Route or URL
+      placeholder: /dawahcast/l/12345
+    validations:
+      required: true
+
+  - type: dropdown
+    id: also-on-live
+    attributes:
+      label: Does it also happen on the live site at dawahnigeria.com?
+      description: >-
+        This tells us whether the bug is new to the rewrite or inherited from
+        the CRA app.
+      options:
+        - "Yes — it happens there too"
+        - "No — only in the rewrite"
+        - "Haven't checked"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: theme
+    attributes:
+      label: Theme
+      description: Styling bugs are frequently theme-specific.
+      options:
+        - Light
+        - Dark
+        - Both
+        - Not related to styling
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser, OS and device
+      placeholder: Chrome 141 on Android 15 (Pixel 7) / Safari 18 on iOS 26 / Firefox 145 on macOS
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or console output
+      description: >-
+        Optional, but very helpful. For visual bugs include both light and dark
+        mode. Most users are on mobile, so a phone-width screenshot is worth
+        more than a desktop one.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: >-
+            If I ran this locally, the dev server was on port 3000 exactly
+            (the API's CORS allowlist rejects other ports and `127.0.0.1`,
+            which makes the app render with no content).
+          required: false

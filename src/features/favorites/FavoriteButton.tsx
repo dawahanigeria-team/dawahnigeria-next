@@ -51,7 +51,6 @@ export function FavoriteButton({
           result.favorited ? "add" : "remove",
         );
       } else {
-        // revert
         setOptimistic(favorited);
         setError(result.message);
       }
