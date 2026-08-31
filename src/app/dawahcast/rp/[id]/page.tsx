@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { MdFavoriteBorder, MdChatBubbleOutline } from "react-icons/md";
 import {
@@ -23,6 +22,7 @@ import { ShareLinks } from "@/lib/ShareLinks";
 import { OG_FALLBACK_IMAGE, socialImageUrl, seoTitle } from "@/lib/socialMeta";
 import { env } from "@/lib/env";
 import { absoluteUrl, JsonLd } from "@/lib/JsonLd";
+import { ScholarAvatar } from "@/features/dawahcast/components/ScholarAvatar";
 
 type Params = { id: string };
 
@@ -128,18 +128,11 @@ export default async function LecturerPage({
       </div>
 
       <header className="mb-10 flex flex-col items-center gap-6 text-center mobile-up:flex-row mobile-up:items-center mobile-up:text-left">
-        <div className="relative h-[180px] w-[180px] shrink-0 overflow-hidden rounded-full bg-muted">
-          {lecturer.image && (
-            <Image
-              src={lecturer.image}
-              alt={lecturer.name}
-              fill
-              sizes="180px"
-              className="object-cover"
-              priority
-            />
-          )}
-        </div>
+        <ScholarAvatar
+          name={lecturer.name}
+          sizeClass="h-[180px] w-[180px]"
+          textClass="text-5xl"
+        />
 
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-semibold text-foreground mobile-up:text-3xl">

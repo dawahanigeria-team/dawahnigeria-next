@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getLecturers } from "../../server/listings";
 import { ROUTES } from "@/lib/routes";
 import { FiArrowRight } from "react-icons/fi";
+import { ScholarAvatar } from "../ScholarAvatar";
 
 export async function FeaturedScholarsSection() {
   let lecturers;
@@ -44,21 +44,12 @@ export async function FeaturedScholarsSection() {
             href={ROUTES.resourcePerson(scholar.id)}
             className="group flex w-[100px] shrink-0 flex-col items-center text-center focus-visible:outline-none sm:w-[120px]"
           >
-            <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-full border-2 border-transparent bg-muted shadow-md transition-all duration-200 group-hover:scale-105 group-hover:border-dncolor-500 group-focus-visible:border-dncolor-500">
-              {scholar.image ? (
-                <Image
-                  src={scholar.image}
-                  alt={scholar.name}
-                  fill
-                  sizes="120px"
-                  className="object-cover"
-                />
-              ) : (
-                <div className="grid h-full w-full place-items-center bg-[#071c18] text-lg font-bold text-white">
-                  {scholar.name.charAt(0)}
-                </div>
-              )}
-            </div>
+            <ScholarAvatar
+              name={scholar.name}
+              sizeClass="mb-2 aspect-square w-full"
+              textClass="text-xl sm:text-2xl"
+              className="border-2 border-transparent shadow-md transition-all duration-200 group-hover:scale-105 group-hover:border-dncolor-500 group-focus-visible:border-dncolor-500"
+            />
             <span className="line-clamp-2 text-xs font-medium text-foreground transition-colors group-hover:text-dncolor-500 sm:text-sm">
               {scholar.name}
             </span>
