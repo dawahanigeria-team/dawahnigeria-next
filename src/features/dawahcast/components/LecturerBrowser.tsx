@@ -1,7 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { FiGrid, FiList } from "react-icons/fi";
 import { LecturerCard } from "./LecturerCard";
+import { LecturerRow } from "./LecturerRow";
 import { InfiniteFooter } from "./InfiniteFooter";
 import { useInfiniteItems } from "../useInfiniteItems";
 import { fetchLecturers } from "../server/lecturerActions";
@@ -38,6 +46,85 @@ function Chip({
   );
 }
 
+type ViewMode = "list" | "grid";
+
+/**
+ * The chosen view, persisted per device.
+ *
+ * Default is the list: this page is a directory of 300+ scholars and the usual
+ * job is to find one, which needs the whole name rather than a picture.
+ */
+const VIEW_STORAGE_KEY = "dn:lecturers:view";
+const viewListeners = new Set<() => void>();
+
+function subscribeView(onChange: () => void) {
+  viewListeners.add(onChange);
+  // `storage` keeps other tabs in step; same-tab writes notify directly.
+  window.addEventListener("storage", onChange);
+  return () => {
+    viewListeners.delete(onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+function readStoredView(): ViewMode {
+  try {
+    return window.localStorage.getItem(VIEW_STORAGE_KEY) === "grid"
+      ? "grid"
+      : "list";
+  } catch {
+    // Private mode or blocked storage: the default is fine.
+    return "list";
+  }
+}
+
+function readServerView(): ViewMode {
+  return "list";
+}
+
+function writeStoredView(next: ViewMode) {
+  try {
+    window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+  } catch {
+    // The preference just will not persist.
+  }
+  viewListeners.forEach((listener) => listener());
+}
+
+function ViewToggle({
+  view,
+  onChange,
+}: {
+  view: ViewMode;
+  onChange: (next: ViewMode) => void;
+}) {
+  const option = (mode: ViewMode, Icon: typeof FiList, label: string) => (
+    <button
+      type="button"
+      onClick={() => onChange(mode)}
+      aria-pressed={view === mode}
+      aria-label={`${label} view`}
+      title={`${label} view`}
+      className={[
+        "flex h-9 w-9 items-center justify-center rounded-md transition-colors",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ddff2b]",
+        view === mode
+          ? "bg-[#ddff2b] text-[#101010]"
+          : "text-muted-foreground hover:bg-hover hover:text-foreground",
+      ].join(" ")}
+    >
+      <Icon size={17} />
+    </button>
+  );
+
+  return (
+    <div className="flex items-center gap-1 rounded-lg border border-border p-1">
+      {option("list", FiList, "List")}
+      {option("grid", FiGrid, "Grid")}
+    </div>
+  );
+}
+
 /**
  * Lecturers directory with the live site's two filter rows: an editorial pick
  * of featured scholars, then Nigerian states.
@@ -57,6 +144,16 @@ export function LecturerBrowser({
   const [state, setState] = useState<string>(ALL_STATES);
   const [lecturers, setLecturers] = useState(initialLecturers);
   const [pending, setPending] = useState(false);
+
+  // Read through useSyncExternalStore rather than setting state in an effect:
+  // it gives the server a defined snapshot ("list"), so there is no hydration
+  // mismatch and no post-mount flash from list to grid.
+  const view = useSyncExternalStore(
+    subscribeView,
+    readStoredView,
+    readServerView,
+  );
+  const chooseView = useCallback((next: ViewMode) => writeStoredView(next), []);
 
   // What the current `lecturers` correspond to, so the first render doesn't
   // refetch the data the server already sent.
@@ -150,24 +247,55 @@ export function LecturerBrowser({
         ))}
       </div>
 
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {items.length > 0 ? `${items.length} loaded` : ""}
+        </p>
+        <ViewToggle view={view} onChange={chooseView} />
+      </div>
+
       {pending ? (
-        <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <li key={i} className="flex flex-col items-center gap-2">
-              <span className="aspect-square w-full animate-pulse rounded-full bg-hover" />
-              <span className="h-3 w-3/4 animate-pulse rounded bg-hover" />
-            </li>
-          ))}
-        </ul>
-      ) : items.length > 0 ? (
-        <>
-          <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4 lg:grid-cols-6">
-            {items.map((l, i) => (
-              <li key={`${l.id}-${i}`}>
-                <LecturerCard lecturer={l} />
+        view === "grid" ? (
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <li key={i} className="flex flex-col gap-2">
+                <span className="aspect-[5/3] w-full animate-pulse rounded-xl bg-hover" />
+                <span className="h-3 w-3/4 animate-pulse rounded bg-hover" />
               </li>
             ))}
           </ul>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <li key={i} className="flex items-center gap-3 p-2">
+                <span className="aspect-[5/3] w-24 animate-pulse rounded-xl bg-hover sm:w-28" />
+                <span className="h-3 w-1/2 animate-pulse rounded bg-hover" />
+              </li>
+            ))}
+          </ul>
+        )
+      ) : items.length > 0 ? (
+        <>
+          {view === "grid" ? (
+            // Two columns on a phone, not three: at three the name is clipped to
+            // roughly its first two words, so scholars who share a title and a
+            // first name become indistinguishable.
+            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+              {items.map((l, i) => (
+                <li key={`${l.id}-${i}`}>
+                  <LecturerCard lecturer={l} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {items.map((l, i) => (
+                <li key={`${l.id}-${i}`}>
+                  <LecturerRow lecturer={l} />
+                </li>
+              ))}
+            </ul>
+          )}
           <InfiniteFooter
             sentinelRef={sentinelRef}
             loading={loading}
