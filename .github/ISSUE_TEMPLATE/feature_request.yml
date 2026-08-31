@@ -1,0 +1,63 @@
+name: Feature or port request
+description: Suggest a new feature, or flag something from the CRA app that has not been ported yet.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This app is actively replacing the CRA frontend, so a missing page is
+        often simply **not ported yet** rather than a deliberate omission.
+        Please check the open issues before filing.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this?
+      options:
+        - Something from the CRA app that is missing here (a port)
+        - A genuinely new feature
+        - An improvement to something that already exists
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: >-
+        Describe the need from a listener's point of view, not the
+        implementation. What can someone not do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like to see?
+      description: If you have a specific design or approach in mind, describe it here.
+    validations:
+      required: true
+
+  - type: input
+    id: prior-art
+    attributes:
+      label: Where does this already exist?
+      description: >-
+        For a port, link the equivalent page on dawahnigeria.com or in the
+        mobile app so we can match the behaviour.
+      placeholder: https://dawahnigeria.com/...
+
+  - type: dropdown
+    id: contributing
+    attributes:
+      label: Would you like to work on this?
+      description: >-
+        Entirely optional. For anything larger than a small fix, please wait for
+        a maintainer to confirm the approach before you start — porting work is
+        coordinated and easy to duplicate.
+      options:
+        - "Yes, I would like to implement it"
+        - "Yes, but I would need guidance"
+        - "No, just suggesting it"
+    validations:
+      required: true

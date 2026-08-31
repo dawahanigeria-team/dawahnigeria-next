@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { FiArrowRight, FiHeadphones, FiRadio } from "react-icons/fi";
+import { FiArrowRight, FiHeadphones } from "react-icons/fi";
 import { ROUTES } from "@/lib/routes";
 import { formatDuration, resolveLecture } from "../../lectureFields";
 import { getFeaturedLecture } from "../../server/landing";

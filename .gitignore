@@ -2,10 +2,22 @@ node_modules
 .next
 .open-next
 .wrangler
+
+# Secrets. .env.development and .env.production are deliberately tracked and
+# hold no secrets — see the table in README.md. Everything below is yours alone.
+.env
 .env.local
 .env*.local
 .dev.vars
 .dev.vars.local
+
+# Editor state. extensions.json is tracked as a contributor aid; the rest is
+# personal — and tasks.json in particular can be configured to run commands
+# automatically when the folder is opened, so it must never arrive through a
+# pull request. CI also scans for that (.github/scripts/check-repository-integrity.sh).
+.vscode/*
+!.vscode/extensions.json
+
 .DS_Store
 next-env.d.ts
 *.tsbuildinfo

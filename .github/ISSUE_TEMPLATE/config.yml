@@ -1,0 +1,18 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/dawahanigeria-team/dawahnigeria-next/security/advisories/new
+    about: Report privately. Never open a public issue for a security problem.
+  - name: Bug on the live dawahnigeria.com site
+    url: https://github.com/dawahanigeria-team/dawahnigeria-web/issues
+    about: The live site is still served by the CRA app. Bugs affecting users today are fixed in that repository.
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # TODO(maintainers): uncomment and set the real invite URL before announcing
+  # the repository publicly. Left commented rather than filled with a
+  # placeholder so a dead link never ships. The same URL also belongs in
+  # README.md ("Getting involved") and CONTRIBUTING.md ("Questions").
+  # ─────────────────────────────────────────────────────────────────────────
+  # - name: Questions and general discussion
+  #   url: https://REPLACE-WITH-COMMUNITY-INVITE-URL
+  #   about: Ask questions, get help setting up, or talk to other contributors.

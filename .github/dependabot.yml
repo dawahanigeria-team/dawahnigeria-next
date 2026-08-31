@@ -1,0 +1,33 @@
+# Keeps dependency and workflow updates visible now that the repository is
+# public — an unpatched advisory in a public repo is an invitation.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Framework upgrades are coupled: Next, React and eslint-config-next move
+      # together, and OpenNext tracks the Next major it supports. Splitting them
+      # across PRs produces builds that cannot pass CI on their own.
+      next-and-react:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "eslint-config-next"
+          - "@opennextjs/cloudflare"
+      dev-tooling:
+        dependency-type: development
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "eslint-config-next"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

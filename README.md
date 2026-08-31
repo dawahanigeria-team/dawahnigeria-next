@@ -192,6 +192,37 @@ There are two public frontends and they are not interchangeable:
 If you are unsure, open an issue and ask before starting — we would rather point
 you at the right one than have you build something twice.
 
+## Getting involved
+
+New here? These are the most useful places to start:
+
+- **[Good first issues](https://github.com/dawahanigeria-team/dawahnigeria-next/labels/good%20first%20issue)**
+  — small, self-contained, and reviewed quickly.
+- **[Help wanted](https://github.com/dawahanigeria-team/dawahnigeria-next/labels/help%20wanted)**
+  — larger pieces we would genuinely like help with.
+- **Porting work.** This app is still replacing the CRA frontend, so whole pages
+  from [dawahnigeria-web](https://github.com/dawahanigeria-team/dawahnigeria-web)
+  are not here yet. Issues labelled `port` track them, and each one is a
+  well-defined chunk of work with an existing implementation to compare against.
+
+Two things worth knowing before you pick something up, because they shape almost
+every change in this repository:
+
+- **Most of our users are on phones.** A change verified only at desktop width is
+  not verified. Check it at a mobile viewport, and mind the vertical budget — the
+  header, the persistent player and the tab bar all compete for the same screen.
+- **Every visual change has two correct answers.** Light and dark mode use
+  different tokens, and a colour that reads well in one is regularly wrong in the
+  other. Check both.
+
+For anything larger than a small fix, **open an issue first** so we can agree the
+approach — porting is coordinated, and duplicated effort is the most common way
+contributor time gets wasted here.
+
+<!-- TODO(maintainers): add the community invite link here before announcing the
+     repository publicly, and uncomment the matching entry in
+     .github/ISSUE_TEMPLATE/config.yml. -->
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Please also read our
