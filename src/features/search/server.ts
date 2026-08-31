@@ -10,6 +10,9 @@ export type SearchItem = Record<string, unknown> & {
   description?: string;
   lecturer_name?: string;
   lecturer_image?: string;
+  /** ~17KB derivatives of the two images above; see resultImage(). */
+  lecturer_avatar?: string;
+  rp_avatar?: string;
   album_id?: string | number;
   album_name?: string;
   rp_id?: string | number;
