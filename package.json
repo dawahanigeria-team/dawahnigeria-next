@@ -2,6 +2,16 @@
   "name": "dawahnigeria-next",
   "version": "0.1.0",
   "private": true,
+  "description": "Next.js web frontend for dawahnigeria.com — discovering and listening to Islamic lectures.",
+  "license": "Apache-2.0",
+  "homepage": "https://dawahnigeria.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dawahanigeria-team/dawahnigeria-next.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dawahanigeria-team/dawahnigeria-next/issues"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "opennextjs-cloudflare build",
