@@ -109,8 +109,31 @@ export function initPostHog() {
         capture_pageview: false,
         capture_pageleave: true,
         autocapture: true,
+
+        // Session recording, sampled. The recorder is 63KB and then uploads
+        // continuously for the whole visit; at 100% every listener on a metered
+        // Nigerian mobile plan paid for that. A tenth of sessions is plenty to
+        // watch for UX problems, and PostHog keeps every session that hits an
+        // error regardless, so debugging is unaffected.
         disable_session_recording: false,
-        enable_recording_console_log: true,
+        session_recording: { sampleRate: 0.1 },
+
+        // Console lines are uploaded with the recording. They are rarely what a
+        // recording is watched for, and Sentry already captures errors with more
+        // context, so this was paying upload for a duplicate.
+        enable_recording_console_log: false,
+
+        // Surveys ship a 33KB bundle to every visitor. The only survey on the
+        // project is an unlaunched NPS draft (start_date null, targeting flag
+        // inactive), so nobody has ever been shown one.
+        // ⚠ Flip this back to false before launching a survey, or it will not
+        // appear.
+        disable_surveys: true,
+
+        // Dead-click detection is a 6KB bundle answering a question nobody has
+        // asked of this project.
+        capture_dead_clicks: false,
+
         capture_performance: true,
         before_send: dropUnactionableExceptions,
         loaded: (p) => {
