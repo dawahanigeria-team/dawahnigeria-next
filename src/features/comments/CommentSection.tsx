@@ -25,27 +25,11 @@ function formatDate(iso: string | undefined): string {
 export async function CommentSection({ itemId, type, pathname }: Props) {
   const session = await getSession();
 
-  if (!session) {
-    return (
-      <section id="comments" aria-label="Comments" className="mt-10 border-t border-border pt-6">
-        <h2 className="text-base font-semibold text-foreground sm:text-lg">
-          Comments
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          <Link
-            href={`/auth/login?next=${encodeURIComponent(pathname)}`}
-            prefetch={false}
-            className="font-medium text-foreground hover:underline"
-          >
-            Sign in
-          </Link>{" "}
-          to view and post comments.
-        </p>
-      </section>
-    );
-  }
-
-  const comments = await getComments(session.user.id, itemId, type);
+  // Comments render for everyone, signed in or not. They used to be hidden
+  // behind the sign-in wall, which meant search engines indexed none of this
+  // page's discussion — the part most likely to contain the words a person
+  // actually searches for.
+  const comments = await getComments(session?.user.id, itemId, type);
 
   return (
     <section id="comments" aria-label="Comments" className="mt-10 border-t border-border pt-6">
@@ -58,11 +42,26 @@ export async function CommentSection({ itemId, type, pathname }: Props) {
         )}
       </h2>
       <div className="mt-3">
-        <CommentForm itemId={itemId} type={type} revalidatePath={pathname} />
+        {session ? (
+          <CommentForm itemId={itemId} type={type} revalidatePath={pathname} />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            <Link
+              href={`/auth/login?next=${encodeURIComponent(pathname)}`}
+              prefetch={false}
+              className="font-medium text-foreground hover:underline"
+            >
+              Sign in
+            </Link>{" "}
+            to share what you took away from this.
+          </p>
+        )}
       </div>
       {comments.length === 0 ? (
         <p className="mt-6 text-sm text-muted-foreground">
-          Be the first to share your thoughts.
+          {session
+            ? "Be the first to share your thoughts."
+            : "No comments yet."}
         </p>
       ) : (
         <ul className="mt-6 flex flex-col gap-4">
