@@ -129,9 +129,9 @@ export default async function LecturerPage({
 
       <header className="mb-10 flex flex-col items-center gap-6 text-center mobile-up:flex-row mobile-up:items-center mobile-up:text-left">
         <div className="relative h-[180px] w-[180px] shrink-0 overflow-hidden rounded-full bg-muted">
-          {lecturer.image && (
+          {(lecturer.avatar || lecturer.image) && (
             <Image
-              src={lecturer.image}
+              src={(lecturer.avatar || lecturer.image) as string}
               alt={lecturer.name}
               fill
               sizes="180px"

@@ -45,9 +45,9 @@ export async function FeaturedScholarsSection() {
             className="group flex w-[100px] shrink-0 flex-col items-center text-center focus-visible:outline-none sm:w-[120px]"
           >
             <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-full border-2 border-transparent bg-muted shadow-md transition-all duration-200 group-hover:scale-105 group-hover:border-dncolor-500 group-focus-visible:border-dncolor-500">
-              {scholar.image ? (
+              {scholar.avatar || scholar.image ? (
                 <Image
-                  src={scholar.image}
+                  src={(scholar.avatar || scholar.image) as string}
                   alt={scholar.name}
                   fill
                   sizes="120px"
