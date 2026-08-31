@@ -47,7 +47,14 @@ export async function getNewLectures(page = 1): Promise<LectureSummary[]> {
 export type LecturerListItem = {
   id: string | number;
   name: string;
+  /** Full-size original, for OG/social cards and structured data. */
   image: string | undefined;
+  /**
+   * 400x240 derivative of the same artwork, ~17KB, uncropped. This is what the
+   * UI shows; the original is up to 820KB for a picture drawn a few hundred
+   * pixels wide.
+   */
+  card: string | undefined;
   raw: Record<string, unknown>;
 };
 
@@ -58,6 +65,7 @@ type LecturerListRaw = Record<string, unknown> & {
   name?: string;
   img?: string;
   image?: string;
+  rp_avatar?: string;
 };
 
 function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
@@ -65,6 +73,7 @@ function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
     id: (raw.nid ?? raw.id) as string | number,
     name: (raw.rpname || raw.name || "Unknown lecturer") as string,
     image: (raw.img || raw.image) as string | undefined,
+    card: (raw.rp_avatar as string | undefined) ?? (raw.img || raw.image) as string | undefined,
     raw,
   }));
 }
