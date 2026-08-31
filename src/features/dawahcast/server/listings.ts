@@ -1,6 +1,11 @@
 import { api } from "@/lib/api";
 import { ALL_LANGUAGES_ID, type LanguageId } from "@/lib/languages";
 import type { LectureSummary } from "./landing";
+import { homeLanguageQuery } from "./homeLanguage";
+import {
+  getListeningPreferences,
+  matchesListeningPreferences,
+} from "@/features/preferences/server";
 
 /**
  * GET /popular_lec_api.php?langid=6&page={page}
@@ -247,19 +252,26 @@ export async function getRecitationAlbums(
  * uses for trending and returns the same shape, so this view uses it too rather
  * than depending on a file no one can maintain.
  */
-export async function getMoreTrending(page = 1): Promise<LectureSummary[]> {
-  return api.get<LectureSummary[]>(
-    `/popular_lec_api.php?langid=6&page=${page}`,
-    { cache: { revalidate: 300, tags: [`more:trending:p${page}`] } },
-  );
+export async function getMoreTrending(): Promise<LectureSummary[]> {
+  return api.get<LectureSummary[]>(`/popular_lec_api.php?langid=6`, {
+    cache: { revalidate: 300, tags: ["more:trending"] },
+  });
 }
 
 /**
- * GET /leclisting_new.php?langid=6&page={page}
+ * GET /leclisting_recent.php?action=get_recent_audio&page={page}
+ *
+ * The same endpoint as the home page's "Recently Posted" row, which this page is
+ * the "more" of. It used to call /leclisting_new.php instead, and that endpoint
+ * answers with `{status, data, pagination}` rather than a bare array — so the
+ * page read an object as a list, found nothing in it, and rendered an empty
+ * "Recently Posted" over a catalogue of thousands. Two different endpoints
+ * behind a row and its own "more" link is how that went unnoticed; pointing both
+ * at one source means the page cannot silently disagree with the row again.
  */
 export async function getMoreRecent(page = 1): Promise<LectureSummary[]> {
   return api.get<LectureSummary[]>(
-    `/leclisting_new.php?langid=6&page=${page}`,
+    `/leclisting_recent.php?action=get_recent_audio&page=${page}${await homeLanguageQuery()}`,
     { cache: { revalidate: 60, tags: [`more:recent:p${page}`] } },
   );
 }
@@ -278,12 +290,26 @@ export async function getMoreRecentlyViewed(
 }
 
 /**
- * GET /leclisting_rec.php?langid=6&page={page}
+ * Popular lectures, narrowed to the listener's stated preferences.
+ *
+ * There is no recommendation endpoint: /leclisting_rec.php does not exist on the
+ * server, so this page had been rendering an empty list for everyone. Rather
+ * than link to a permanently blank page, build the recommendation the same way
+ * the hero does — take what is popular and keep what matches the languages and
+ * scholars the listener chose. With no preferences set, "recommended" is simply
+ * what is popular, which is the honest answer for someone we know nothing about.
  */
-export async function getMoreRecommended(page = 1): Promise<LectureSummary[]> {
-  return api.get<LectureSummary[]>(
-    `/leclisting_rec.php?langid=6&page=${page}`,
-    { cache: { revalidate: 300, tags: [`more:recommended:p${page}`] } },
+export async function getMoreRecommended(): Promise<LectureSummary[]> {
+  const [popular, preferences] = await Promise.all([
+    api.get<LectureSummary[]>(`/popular_lec_api.php?langid=6`, {
+      cache: { revalidate: 300, tags: ["more:recommended"] },
+    }),
+    getListeningPreferences(),
+  ]);
+  if (!Array.isArray(popular)) return [];
+  if (!preferences.configured) return popular;
+  return popular.filter((lecture) =>
+    matchesListeningPreferences(lecture as Record<string, unknown>, preferences),
   );
 }
 
