@@ -135,14 +135,20 @@ function ViewToggle({
  */
 export function LecturerBrowser({
   initialLecturers,
+  initialTotal,
   states,
 }: {
   initialLecturers: LecturerListItem[];
+  initialTotal: number;
   states: string[];
 }) {
   const [lecturerId, setLecturerId] = useState<number | null>(null);
   const [state, setState] = useState<string>(ALL_STATES);
   const [lecturers, setLecturers] = useState(initialLecturers);
+  // How many scholars match the current filter, straight from the API. Without
+  // it the header could only report how many rows had been loaded, which reads
+  // as though the catalogue were 10 people deep.
+  const [total, setTotal] = useState(initialTotal);
   const [pending, setPending] = useState(false);
 
   // Read through useSyncExternalStore rather than setting state in an effect:
@@ -170,7 +176,8 @@ export function LecturerBrowser({
       // Drop a slow response for a filter the user has already moved off.
       if (id !== requestId.current) return;
       loadedFor.current = key;
-      setLecturers(next);
+      setLecturers(next.items);
+      setTotal(next.total);
       setPending(false);
     });
   }, [lecturerId, state]);
@@ -183,7 +190,8 @@ export function LecturerBrowser({
       // ignores `page` and would hand back the same record forever, appending
       // duplicates on every scroll. Report "no more" instead.
       if (lecturerId !== null) return [];
-      return fetchLecturers({ state, page });
+      const next = await fetchLecturers({ state, page });
+      return next.items;
     },
     [lecturerId, state],
   );
@@ -249,7 +257,11 @@ export function LecturerBrowser({
 
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground" aria-live="polite">
-          {items.length > 0 ? `${items.length} loaded` : ""}
+          {total > items.length
+            ? `Showing ${items.length} of ${total} scholars`
+            : total > 0
+              ? `${total} ${total === 1 ? "scholar" : "scholars"}`
+              : ""}
         </p>
         <ViewToggle view={view} onChange={chooseView} />
       </div>

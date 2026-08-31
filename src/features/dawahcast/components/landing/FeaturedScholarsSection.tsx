@@ -7,7 +7,7 @@ import { ScholarAvatar } from "../ScholarAvatar";
 export async function FeaturedScholarsSection() {
   let lecturers;
   try {
-    lecturers = await getLecturers(1);
+    lecturers = (await getLecturers(1)).items;
   } catch (e) {
     console.error("FeaturedScholarsSection: Failed to load lecturers", e);
     return null;

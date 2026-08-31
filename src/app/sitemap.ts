@@ -144,7 +144,7 @@ const buildSitemap = unstable_cache(
 
     const [lectures, lecturers, albums, playlists, categories] = await Promise.all([
       walkPages(getNewLectures, LECTURE_PAGES),
-      walkPages(getLecturers, LECTURER_PAGES),
+      walkPages((page) => getLecturers(page).then((r) => r.items), LECTURER_PAGES),
       // Every Quran recitation on the site is an album, so leaving these out left
       // the whole recitation catalogue reachable only by crawling listing pages.
       walkPages(getRecitationAlbums, ALBUM_PAGES),
