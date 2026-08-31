@@ -15,7 +15,7 @@ import { shouldLoadTawkWidget } from "./tawk";
 const TAWK_PROPERTY_ID = "5cd3dd3ed07d7e0c6392ad09";
 const TAWK_WIDGET_ID = "default";
 
-// The bottom offsets in the className (205px mobile, 95px from `sm`) mirror
+// The bottom offsets in the className (205px mobile, 150px from `sm`) mirror
 // MOBILE_Y_OFFSET and DESKTOP_Y_OFFSET in tawk-embed.ts, so the placeholder sits
 // exactly where the real launcher appears — the swap on click must not move
 // under the cursor. Both clear this app's player bar and tab bar.
@@ -141,7 +141,7 @@ export function ChatLauncher() {
       onClick={openChat}
       aria-label="Open support chat"
       aria-busy={loading}
-      className="fixed bottom-[205px] right-3 z-40 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#3fa34d] text-white shadow-lg transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ddff2b] active:scale-95 sm:bottom-[95px] sm:right-5"
+      className="fixed bottom-[205px] right-3 z-40 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#3fa34d] text-white shadow-lg transition-transform hover:scale-105 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ddff2b] active:scale-95 sm:bottom-[150px] sm:right-5"
     >
       {loading ? (
         <span
