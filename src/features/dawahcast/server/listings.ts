@@ -4,7 +4,7 @@ import type { LectureSummary } from "./landing";
 import { homeLanguageQuery } from "./homeLanguage";
 import {
   getListeningPreferences,
-  matchesListeningPreferences,
+  preferenceQuery,
 } from "@/features/preferences/server";
 
 /**
@@ -252,10 +252,11 @@ export async function getRecitationAlbums(
  * uses for trending and returns the same shape, so this view uses it too rather
  * than depending on a file no one can maintain.
  */
-export async function getMoreTrending(): Promise<LectureSummary[]> {
-  return api.get<LectureSummary[]>(`/popular_lec_api.php?langid=6`, {
-    cache: { revalidate: 300, tags: ["more:trending"] },
-  });
+export async function getMoreTrending(page = 1): Promise<LectureSummary[]> {
+  return api.get<LectureSummary[]>(
+    `/trending_new.php?langid=6&page=${page}`,
+    { cache: { revalidate: 300, tags: [`more:trending:p${page}`] } },
+  );
 }
 
 /**
@@ -299,17 +300,11 @@ export async function getMoreRecentlyViewed(
  * scholars the listener chose. With no preferences set, "recommended" is simply
  * what is popular, which is the honest answer for someone we know nothing about.
  */
-export async function getMoreRecommended(): Promise<LectureSummary[]> {
-  const [popular, preferences] = await Promise.all([
-    api.get<LectureSummary[]>(`/popular_lec_api.php?langid=6`, {
-      cache: { revalidate: 300, tags: ["more:recommended"] },
-    }),
-    getListeningPreferences(),
-  ]);
-  if (!Array.isArray(popular)) return [];
-  if (!preferences.configured) return popular;
-  return popular.filter((lecture) =>
-    matchesListeningPreferences(lecture as Record<string, unknown>, preferences),
+export async function getMoreRecommended(page = 1): Promise<LectureSummary[]> {
+  const preferences = await getListeningPreferences();
+  return api.get<LectureSummary[]>(
+    `/leclisting_rec.php?langid=6&page=${page}${preferenceQuery(preferences)}`,
+    { cache: { revalidate: 300, tags: [`more:recommended:p${page}`] } },
   );
 }
 
