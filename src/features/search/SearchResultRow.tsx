@@ -24,10 +24,25 @@ function hrefForResult(type: string | undefined, id: string | number): string {
   }
 }
 
+/**
+ * The thumbnail for a result row, cheapest usable version first.
+ *
+ * A row draws this about 64px wide. `lecturer_image` and `img` are full-size
+ * originals — up to 820KB for a scholar's card — so the ~17KB derivatives the
+ * API now returns alongside them come first. The originals stay as the fallback
+ * for the handful of records that have no derivative.
+ */
 function resultImage(item: SearchItem): string | undefined {
   return (
+    // A lecturer result: rp_avatar is the small version of that row's `img`.
+    (item.rp_avatar as string | undefined) ||
+    // A lecture or album keeps its own artwork ahead of the scholar's picture,
+    // which is why lecturer_avatar sits exactly where lecturer_image sat rather
+    // than at the front — moving it up would replace the lecture's cover with a
+    // portrait of whoever gave it.
     (item.img as string | undefined) ||
     (item.img_url as string | undefined) ||
+    (item.lecturer_avatar as string | undefined) ||
     (item.lecturer_image as string | undefined) ||
     (item.album_image as string | undefined) ||
     (item.image as string | undefined) ||

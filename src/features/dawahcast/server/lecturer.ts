@@ -5,6 +5,8 @@ export type Lecturer = {
   id: string | number;
   name: string;
   image: string | undefined;
+  /** 400x240 uncropped derivative used on the page; see LecturerListItem.card. */
+  card: string | undefined;
   bio: string | undefined;
   /** Totals the API reports directly — the tab labels use these, not page sizes. */
   totalAudio: number;
@@ -28,6 +30,7 @@ type LecturerRaw = Record<string, unknown> & {
   name?: string;
   img?: string;
   image?: string;
+  rp_avatar?: string;
   description?: string;
   bio?: string;
 };
@@ -37,6 +40,7 @@ function pickLecturer(raw: LecturerRaw): Lecturer {
     id: (raw.nid ?? raw.id) as string | number,
     name: (raw.rpname || raw.name || "Unknown lecturer") as string,
     image: (raw.img || raw.image) as string | undefined,
+    card: (raw.rp_avatar as string | undefined) ?? ((raw.img || raw.image) as string | undefined),
     bio: (raw.description || raw.bio) as string | undefined,
     totalAudio: toNum(raw.total_audio),
     totalAlbums: toNum(raw.total_albums),

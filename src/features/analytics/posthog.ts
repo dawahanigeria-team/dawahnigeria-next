@@ -109,8 +109,34 @@ export function initPostHog() {
         capture_pageview: false,
         capture_pageleave: true,
         autocapture: true,
-        disable_session_recording: false,
-        enable_recording_console_log: true,
+
+        // Session replay is Sentry's job here, not PostHog's — two tools were
+        // recording the same sessions.
+        //
+        // Sentry won that comparison on measurement, not preference: removing
+        // Sentry.replayIntegration() and rebuilding changes the client bundle by
+        // zero bytes, because the replay code ships inside @sentry/nextjs
+        // whether it is called or not. PostHog's recorder is a separate 63KB
+        // download that exists only to record, and then uploads continuously for
+        // the whole visit. One of the two was free and the other was not.
+        //
+        // Sentry also keeps a replay for *every* error
+        // (replaysOnErrorSampleRate 1.0), which is the thing replays are
+        // actually watched for. PostHog keeps autocapture and events, so
+        // funnels and product analytics are unaffected — only the video goes.
+        disable_session_recording: true,
+
+        // Surveys ship a 33KB bundle to every visitor. The only survey on the
+        // project is an unlaunched NPS draft (start_date null, targeting flag
+        // inactive), so nobody has ever been shown one.
+        // ⚠ Flip this back to false before launching a survey, or it will not
+        // appear.
+        disable_surveys: true,
+
+        // Dead-click detection is a 6KB bundle answering a question nobody has
+        // asked of this project.
+        capture_dead_clicks: false,
+
         capture_performance: true,
         before_send: dropUnactionableExceptions,
         loaded: (p) => {

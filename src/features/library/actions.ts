@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api";
-import { getSession } from "@/features/auth/session";
+import { getAccessToken, getSession } from "@/features/auth/session";
 import { getUserPlaylists } from "./server";
 
 export type CreatePlaylistState = {
@@ -65,7 +65,7 @@ export async function createPlaylistAction(
         is_private: isPrivate,
         user_id: Number(session.user.id) || session.user.id,
       },
-      { cache: { revalidate: false } },
+      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
     );
   } catch (err) {
     if (err instanceof ApiError) {
@@ -118,7 +118,7 @@ export async function addAudioToPlaylistAction(input: {
             ? Number(input.playlistId) || input.playlistId
             : input.playlistId,
       },
-      { cache: { revalidate: false } },
+      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
     );
   } catch (err) {
     if (err instanceof ApiError) {
@@ -183,7 +183,7 @@ export async function removeAudioFromPlaylistAction(input: {
             ? Number(input.playlistId) || input.playlistId
             : input.playlistId,
       },
-      { cache: { revalidate: false } },
+      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
     );
   } catch (err) {
     if (err instanceof ApiError) {

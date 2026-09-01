@@ -14,15 +14,18 @@ type TawkWindow = Window & {
  * reach it — the offset has to go through Tawk_API, and it must be assigned
  * *before* the embed script runs.
  *
- * Measured in-browser at 2026-08-09:
- *   desktop (881px): PlayerBar `bottom-0`, 77px tall  → 77px of chrome
- *   mobile  (375px): PlayerBar `bottom-16` (125px) over a 57px BottomNav → 189px
+ * Re-measured in-browser on the live site, 2026-08-31, by reading the height of
+ * the fixed bottom container directly:
+ *   375px wide → 179px of chrome
+ *   713px wide → 131px of chrome
  *
- * CRA used a single 170px for both, which is too small on this layout's mobile
- * breakpoint and needlessly high on desktop. Tawk takes per-platform values, so
- * each clears its own chrome with a small margin.
+ * The previous desktop value of 95px was derived from the player bar alone
+ * (77px). It missed the tab bar, which this app renders at *every* width, not
+ * only on mobile — so the launcher sat behind the player and could not be
+ * clicked on anything wider than the mobile breakpoint. 150px clears the
+ * measured 131px with room for the chrome to grow a little.
  */
-const DESKTOP_Y_OFFSET = 95;
+const DESKTOP_Y_OFFSET = 150;
 const MOBILE_Y_OFFSET = 205;
 
 export function buildTawkSrc(propertyId: string, widgetId: string): string {

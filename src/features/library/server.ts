@@ -1,4 +1,5 @@
 import "server-only";
+import { getAccessToken } from "@/features/auth/session";
 import { api } from "@/lib/api";
 
 export type UserPlaylist = {
@@ -41,7 +42,7 @@ export async function getUserPlaylists(userId: string): Promise<UserPlaylist[]> 
   try {
     const res = await api.get<{ data?: UserPlaylistRaw[] } | UserPlaylistRaw[]>(
       `/playlistApi.php?user_id=${encodeURIComponent(userId)}&action=user_playlists`,
-      { cache: { revalidate: false } },
+      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
     );
     list = Array.isArray(res) ? res : (res?.data ?? []);
   } catch {

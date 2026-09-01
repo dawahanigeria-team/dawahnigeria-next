@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { connection } from "next/server";
 import { api, apiAdminister } from "@/lib/api";
+import { getAccessToken } from "@/features/auth/session";
 import {
   getListeningPreferences,
   matchesListeningPreferences,
@@ -170,7 +171,7 @@ export async function getRecentlyViewedAnonymous(page = 1) {
 export async function getRecentlyViewedForUser(userId: string) {
   return api.get<Array<{ data: Record<string, LectureSummary> }>>(
     `/recentApi.php?user_id=${encodeURIComponent(userId)}&action=get_recent`,
-    { cache: { revalidate: false } },
+    { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
   );
 }
 

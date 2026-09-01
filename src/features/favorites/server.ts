@@ -1,4 +1,5 @@
 import "server-only";
+import { getAccessToken } from "@/features/auth/session";
 import { api } from "@/lib/api";
 import type { LectureSummary } from "@/features/dawahcast/server/landing";
 
@@ -18,7 +19,7 @@ export async function getFavorites(
 ): Promise<Record<string, unknown>[]> {
   const list = await api.get<unknown>(
     `/leclisting_favorites.php?user_id=${encodeURIComponent(userId)}&type=${type}`,
-    { cache: { revalidate: false } },
+    { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
   );
   return Array.isArray(list) ? (list as Record<string, unknown>[]) : [];
 }

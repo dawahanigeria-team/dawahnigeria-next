@@ -4,7 +4,7 @@ import { MoreListing } from "@/features/dawahcast/components/MoreListing";
 import { parsePage } from "@/features/dawahcast/components/PageNav";
 import { ROUTES } from "@/lib/routes";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 export const metadata: Metadata = {
   title: "Recently Viewed resources on Dawah Nigeria",

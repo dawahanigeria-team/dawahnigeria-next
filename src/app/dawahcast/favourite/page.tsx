@@ -112,10 +112,11 @@ function FavoriteGrid({
             (raw.name as string | undefined) ||
             "Unknown lecturer";
           const image = (raw.img as string | undefined) || (raw.image as string | undefined);
+          const card = (raw.rp_avatar as string | undefined) ?? image;
           return (
             <li key={`${id}-${i}`} className="relative">
               <LecturerCard
-                lecturer={{ id, name, image, raw }}
+                lecturer={{ id, name, image, card, raw }}
               />
               <FavoriteButton
                 itemId={id}

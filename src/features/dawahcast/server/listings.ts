@@ -1,6 +1,11 @@
 import { api } from "@/lib/api";
 import { ALL_LANGUAGES_ID, type LanguageId } from "@/lib/languages";
 import type { LectureSummary } from "./landing";
+import { homeLanguageQuery } from "./homeLanguage";
+import {
+  getListeningPreferences,
+  preferenceQuery,
+} from "@/features/preferences/server";
 
 /**
  * GET /popular_lec_api.php?langid=6&page={page}
@@ -47,7 +52,14 @@ export async function getNewLectures(page = 1): Promise<LectureSummary[]> {
 export type LecturerListItem = {
   id: string | number;
   name: string;
+  /** Full-size original, for OG/social cards and structured data. */
   image: string | undefined;
+  /**
+   * 400x240 derivative of the same artwork, ~17KB, uncropped. This is what the
+   * UI shows; the original is up to 820KB for a picture drawn a few hundred
+   * pixels wide.
+   */
+  card: string | undefined;
   raw: Record<string, unknown>;
 };
 
@@ -58,6 +70,7 @@ type LecturerListRaw = Record<string, unknown> & {
   name?: string;
   img?: string;
   image?: string;
+  rp_avatar?: string;
 };
 
 function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
@@ -65,27 +78,52 @@ function toLecturerItems(list: LecturerListRaw[] | null): LecturerListItem[] {
     id: (raw.nid ?? raw.id) as string | number,
     name: (raw.rpname || raw.name || "Unknown lecturer") as string,
     image: (raw.img || raw.image) as string | undefined,
+    card: (raw.rp_avatar as string | undefined) ?? (raw.img || raw.image) as string | undefined,
     raw,
   }));
 }
 
 /**
- * GET /all_rps_api.php?offset=30&lim=10&page={page}[&state=…]
+ * GET /all_rps_api.php?lim=10&page={page}[&state=…]&meta=1
  */
+export type LecturerPage = {
+  items: LecturerListItem[];
+  /**
+   * How many scholars match the current filter in total, not how many this page
+   * carried. Showing the loaded count is what made the apps read as though the
+   * catalogue were 10 or 20 people deep.
+   */
+  total: number;
+};
+
 export async function getLecturers(
   page = 1,
   state?: string,
-): Promise<LecturerListItem[]> {
-  const query = state
-    ? `offset=30&lim=10&page=${page}&state=${encodeURIComponent(state)}`
-    : `offset=30&lim=10&page=${page}`;
-  const list = await api.get<LecturerListRaw[]>(`/all_rps_api.php?${query}`, {
-    cache: {
-      revalidate: 600,
-      tags: [`lecturers:${state ?? "all"}:p${page}`],
+): Promise<LecturerPage> {
+  const base = state
+    ? `lim=10&page=${page}&state=${encodeURIComponent(state)}`
+    : `lim=10&page=${page}`;
+  // `meta=1` asks for the paginated envelope, which carries the catalogue total
+  // in the body. The total also rides on an X-Total-Count header, but a header
+  // is lost the moment a response is served from cache.
+  const res = await api.get<LecturerListRaw[] | { data: LecturerListRaw[]; total: number }>(
+    `/all_rps_api.php?${base}&meta=1`,
+    {
+      cache: {
+        revalidate: 600,
+        tags: [`lecturers:${state ?? "all"}:p${page}`],
+      },
     },
-  });
-  return toLecturerItems(list);
+  );
+
+  // An older upstream answers with a bare array and no total; fall back to the
+  // page length rather than inventing a number.
+  const list = Array.isArray(res) ? res : (res?.data ?? []);
+  const items = toLecturerItems(list);
+  const total =
+    !Array.isArray(res) && typeof res?.total === "number" ? res.total : items.length;
+
+  return { items, total };
 }
 
 /** Lightweight catalogue used only by the account preference picker. */
@@ -216,17 +254,25 @@ export async function getRecitationAlbums(
  */
 export async function getMoreTrending(page = 1): Promise<LectureSummary[]> {
   return api.get<LectureSummary[]>(
-    `/popular_lec_api.php?langid=6&page=${page}`,
+    `/trending_new.php?langid=6&page=${page}`,
     { cache: { revalidate: 300, tags: [`more:trending:p${page}`] } },
   );
 }
 
 /**
- * GET /leclisting_new.php?langid=6&page={page}
+ * GET /leclisting_recent.php?action=get_recent_audio&page={page}
+ *
+ * The same endpoint as the home page's "Recently Posted" row, which this page is
+ * the "more" of. It used to call /leclisting_new.php instead, and that endpoint
+ * answers with `{status, data, pagination}` rather than a bare array — so the
+ * page read an object as a list, found nothing in it, and rendered an empty
+ * "Recently Posted" over a catalogue of thousands. Two different endpoints
+ * behind a row and its own "more" link is how that went unnoticed; pointing both
+ * at one source means the page cannot silently disagree with the row again.
  */
 export async function getMoreRecent(page = 1): Promise<LectureSummary[]> {
   return api.get<LectureSummary[]>(
-    `/leclisting_new.php?langid=6&page=${page}`,
+    `/leclisting_recent.php?action=get_recent_audio&page=${page}${await homeLanguageQuery()}`,
     { cache: { revalidate: 60, tags: [`more:recent:p${page}`] } },
   );
 }
@@ -245,11 +291,19 @@ export async function getMoreRecentlyViewed(
 }
 
 /**
- * GET /leclisting_rec.php?langid=6&page={page}
+ * Popular lectures, narrowed to the listener's stated preferences.
+ *
+ * There is no recommendation endpoint: /leclisting_rec.php does not exist on the
+ * server, so this page had been rendering an empty list for everyone. Rather
+ * than link to a permanently blank page, build the recommendation the same way
+ * the hero does — take what is popular and keep what matches the languages and
+ * scholars the listener chose. With no preferences set, "recommended" is simply
+ * what is popular, which is the honest answer for someone we know nothing about.
  */
 export async function getMoreRecommended(page = 1): Promise<LectureSummary[]> {
+  const preferences = await getListeningPreferences();
   return api.get<LectureSummary[]>(
-    `/leclisting_rec.php?langid=6&page=${page}`,
+    `/leclisting_rec.php?langid=6&page=${page}${preferenceQuery(preferences)}`,
     { cache: { revalidate: 300, tags: [`more:recommended:p${page}`] } },
   );
 }
