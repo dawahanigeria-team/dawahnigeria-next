@@ -1,6 +1,5 @@
 import "server-only";
-import { getAccessToken } from "@/features/auth/session";
-import { api } from "@/lib/api";
+import { apiUser } from "@/lib/api-user";
 import type { LectureSummary } from "@/features/dawahcast/server/landing";
 
 export type FavoriteType = "audio" | "album" | "rp" | "playlist";
@@ -17,9 +16,8 @@ export async function getFavorites(
   userId: string,
   type: FavoriteType,
 ): Promise<Record<string, unknown>[]> {
-  const list = await api.get<unknown>(
-    `/leclisting_favorites.php?user_id=${encodeURIComponent(userId)}&type=${type}`,
-    { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+  const list = await apiUser.get<unknown>(
+    `/leclisting_favorites.php?user_id=${encodeURIComponent(userId)}&type=${type}`
   );
   return Array.isArray(list) ? (list as Record<string, unknown>[]) : [];
 }

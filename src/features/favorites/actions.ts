@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { api, ApiError } from "@/lib/api";
-import { getAccessToken, getSession } from "@/features/auth/session";
+import { ApiError } from "@/lib/api";
+import { apiUser } from "@/lib/api-user";
+import { getSession } from "@/features/auth/session";
 import type { FavoriteType } from "./server";
 
 export type ToggleResult =
@@ -30,14 +31,13 @@ export async function toggleFavoriteAction(input: {
   }
 
   try {
-    await api.post(
+    await apiUser.post(
       "/leclisting_favorites.php",
       {
         user_id: session.user.id,
         item_id: input.itemId,
         type: input.type,
-      },
-      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+      }
     );
   } catch (err) {
     if (err instanceof ApiError) {

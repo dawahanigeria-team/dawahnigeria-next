@@ -1,6 +1,5 @@
 import "server-only";
-import { getAccessToken } from "@/features/auth/session";
-import { api } from "@/lib/api";
+import { apiUser } from "@/lib/api-user";
 
 export type UserPlaylist = {
   id: string | number;
@@ -28,7 +27,7 @@ type UserPlaylistRaw = Record<string, unknown> & {
  *
  * This endpoint wraps its payload — `{ success, message, data }` — and omits
  * `data` entirely on failure (`{"success":false,"message":"Invalid user ID"}`).
- * `api.get` does no unwrapping; its type parameter is an unchecked assertion.
+ * `apiUser.get` does no unwrapping; its type parameter is an unchecked assertion.
  * Iterating the envelope directly threw `list is not iterable` and took down
  * every page that calls this: library, album, lecture, playlist, new and
  * trending, for signed-in users only.
@@ -40,9 +39,8 @@ type UserPlaylistRaw = Record<string, unknown> & {
 export async function getUserPlaylists(userId: string): Promise<UserPlaylist[]> {
   let list: UserPlaylistRaw[];
   try {
-    const res = await api.get<{ data?: UserPlaylistRaw[] } | UserPlaylistRaw[]>(
-      `/playlistApi.php?user_id=${encodeURIComponent(userId)}&action=user_playlists`,
-      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+    const res = await apiUser.get<{ data?: UserPlaylistRaw[] } | UserPlaylistRaw[]>(
+      `/playlistApi.php?user_id=${encodeURIComponent(userId)}&action=user_playlists`
     );
     list = Array.isArray(res) ? res : (res?.data ?? []);
   } catch {
