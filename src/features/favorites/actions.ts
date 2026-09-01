@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api";
-import { getSession } from "@/features/auth/session";
+import { getAccessToken, getSession } from "@/features/auth/session";
 import type { FavoriteType } from "./server";
 
 export type ToggleResult =
@@ -37,7 +37,7 @@ export async function toggleFavoriteAction(input: {
         item_id: input.itemId,
         type: input.type,
       },
-      { cache: { revalidate: false } },
+      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
     );
   } catch (err) {
     if (err instanceof ApiError) {

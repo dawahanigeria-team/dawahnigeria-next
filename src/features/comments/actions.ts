@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api";
-import { getSession } from "@/features/auth/session";
+import { getAccessToken, getSession } from "@/features/auth/session";
 import type { CommentType } from "./server";
 
 export type AddCommentState = {
@@ -48,7 +48,7 @@ export async function addCommentAction(
         type,
         comment: body,
       },
-      { cache: { revalidate: false } },
+      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
     );
   } catch (err) {
     if (err instanceof ApiError) {
