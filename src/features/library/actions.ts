@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { api, ApiError } from "@/lib/api";
-import { getAccessToken, getSession } from "@/features/auth/session";
+import { ApiError } from "@/lib/api";
+import { apiUser } from "@/lib/api-user";
+import { getSession } from "@/features/auth/session";
 import { getUserPlaylists } from "./server";
 
 export type CreatePlaylistState = {
@@ -57,15 +58,14 @@ export async function createPlaylistAction(
   }
 
   try {
-    await api.post(
+    await apiUser.post(
       "/playlistApi.php",
       {
         action: "create_playlist",
         name,
         is_private: isPrivate,
         user_id: Number(session.user.id) || session.user.id,
-      },
-      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+      }
     );
   } catch (err) {
     if (err instanceof ApiError) {
@@ -104,7 +104,7 @@ export async function addAudioToPlaylistAction(input: {
 
   let response: unknown;
   try {
-    response = await api.post(
+    response = await apiUser.post(
       "/playlistApi.php",
       {
         action: "add_playlist_audio",
@@ -117,8 +117,7 @@ export async function addAudioToPlaylistAction(input: {
           typeof input.playlistId === "string"
             ? Number(input.playlistId) || input.playlistId
             : input.playlistId,
-      },
-      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+      }
     );
   } catch (err) {
     if (err instanceof ApiError) {
@@ -169,7 +168,7 @@ export async function removeAudioFromPlaylistAction(input: {
 
   let result: { success?: boolean; message?: string } | null = null;
   try {
-    result = await api.post<{ success?: boolean; message?: string }>(
+    result = await apiUser.post<{ success?: boolean; message?: string }>(
       "/playlistApi.php",
       {
         action: "remove_playlist_audio",
@@ -182,8 +181,7 @@ export async function removeAudioFromPlaylistAction(input: {
           typeof input.playlistId === "string"
             ? Number(input.playlistId) || input.playlistId
             : input.playlistId,
-      },
-      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+      }
     );
   } catch (err) {
     if (err instanceof ApiError) {

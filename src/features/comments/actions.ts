@@ -1,8 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { api, ApiError } from "@/lib/api";
-import { getAccessToken, getSession } from "@/features/auth/session";
+import { ApiError } from "@/lib/api";
+import { apiUser } from "@/lib/api-user";
+import { getSession } from "@/features/auth/session";
 import type { CommentType } from "./server";
 
 export type AddCommentState = {
@@ -40,15 +41,14 @@ export async function addCommentAction(
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors };
 
   try {
-    await api.post(
+    await apiUser.post(
       "/commentApi.php",
       {
         user_id: Number(session.user.id) || session.user.id,
         item_id: Number(itemId) || itemId,
         type,
         comment: body,
-      },
-      { cache: { revalidate: false }, token: (await getAccessToken()) ?? undefined },
+      }
     );
   } catch (err) {
     if (err instanceof ApiError) {
