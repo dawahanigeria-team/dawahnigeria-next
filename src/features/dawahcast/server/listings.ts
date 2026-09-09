@@ -45,7 +45,7 @@ export async function getTrendingByLanguage(
 export async function getNewLectures(page = 1): Promise<LectureSummary[]> {
   return api.get<LectureSummary[]>(
     `/leclisting_recent.php?action=get_recent_audio&page=${page}`,
-    { cache: { revalidate: 60, tags: [`new:p${page}`] } },
+    { cache: { revalidate: 600, tags: [`new:p${page}`] } },
   );
 }
 
@@ -273,7 +273,7 @@ export async function getMoreTrending(page = 1): Promise<LectureSummary[]> {
 export async function getMoreRecent(page = 1): Promise<LectureSummary[]> {
   return api.get<LectureSummary[]>(
     `/leclisting_recent.php?action=get_recent_audio&page=${page}${await homeLanguageQuery()}`,
-    { cache: { revalidate: 60, tags: [`more:recent:p${page}`] } },
+    { cache: { revalidate: 600, tags: [`more:recent:p${page}`] } },
   );
 }
 
@@ -286,7 +286,7 @@ export async function getMoreRecentlyViewed(
 ): Promise<LectureSummary[]> {
   return api.get<LectureSummary[]>(
     `/leclisting_lang.php?langid=6&page=${page}`,
-    { cache: { revalidate: 60, tags: [`more:viewed:p${page}`] } },
+    { cache: { revalidate: 600, tags: [`more:viewed:p${page}`] } },
   );
 }
 

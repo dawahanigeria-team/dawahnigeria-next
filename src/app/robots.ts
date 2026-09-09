@@ -6,6 +6,23 @@ import { env } from "@/lib/env";
 const INDEXABLE_HOSTS = new Set(["dawahnigeria.com", "www.dawahnigeria.com"]);
 
 /**
+ * Commercial SEO crawlers, blocked for cost rather than privacy. They walk the
+ * whole catalogue, and because every lecture URL is distinct each hit misses the
+ * per-colo HTML cache and pays a full render -- measured 2026-09-09 at ~14% of
+ * the Worker's CPU, against a route (`/dawahcast/l/{id}`) that is already 63% of
+ * it. Nothing about the site's discoverability rides on them: search engines
+ * match the `*` group below, and Cloudflare prepends its own AI-crawler blocks
+ * to this file before it is served.
+ *
+ * These are the exact product tokens seen in production; per RFC 9309 a crawler
+ * only obeys the group whose token matches its own, so a vendor's other tools
+ * (AhrefsSiteAudit, the SemrushBot-* variants) each need their own entry if they
+ * ever show up. robots.txt is voluntary -- if either starts ignoring it, the
+ * enforcing fix is a WAF rule on the user agent.
+ */
+const BLOCKED_CRAWLERS = ["AhrefsBot", "SemrushBot"];
+
+/**
  * Decided per host rather than per build, because the same bundle is served
  * from the workers.dev URL as well as production. Letting a preview host be
  * crawled would put a second copy of the whole catalogue into the index,
@@ -39,11 +56,17 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   ];
 
   return {
-    rules: [
-      indexable
-        ? { userAgent: "*", allow: "/", disallow: PRIVATE_PATHS }
-        : { userAgent: "*", disallow: "/" },
-    ],
+    // On a non-indexable host the wildcard already denies everything, so the
+    // per-crawler groups would be dead weight there.
+    rules: indexable
+      ? [
+          ...BLOCKED_CRAWLERS.map((userAgent) => ({
+            userAgent,
+            disallow: "/",
+          })),
+          { userAgent: "*", allow: "/", disallow: PRIVATE_PATHS },
+        ]
+      : [{ userAgent: "*", disallow: "/" }],
     // Always the canonical site's sitemap — a preview host should never
     // advertise its own copy.
     sitemap: `${env.siteUrl}/sitemap.xml`,

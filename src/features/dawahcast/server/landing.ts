@@ -101,7 +101,7 @@ export const getVisibleSpecialFeatureGroups = cache(
 export async function getRecentlyPosted(page = 1) {
   return api.get<LectureSummary[]>(
     `/leclisting_recent.php?action=get_recent_audio&page=${page}${await homeLanguageQuery()}`,
-    { cache: { revalidate: 60, tags: [LANDING_TAGS.recent] } },
+    { cache: { revalidate: 600, tags: [LANDING_TAGS.recent] } },
   );
 }
 
@@ -157,7 +157,7 @@ export async function getFeaturedLecture(): Promise<LectureSummary | null> {
 export async function getRecentlyViewedAnonymous(page = 1) {
   return api.get<LectureSummary[]>(
     `/leclisting_lang.php?langid=6&page=${page}`,
-    { cache: { revalidate: 60 } },
+    { cache: { revalidate: 600 } },
   );
 }
 
