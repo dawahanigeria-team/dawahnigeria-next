@@ -95,7 +95,7 @@ export async function getLectureWithSiblings(
 ): Promise<TrackCollection | null> {
   const tracks = await api.get<AlbumTrack[]>(
     `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}`,
-    { cache: { revalidate: 300, tags: [`lecture:${lecid}`] } },
+    { cache: { revalidate: 3600, tags: [`lecture:${lecid}`] } },
   );
   return summarize(tracks);
 }
@@ -136,7 +136,7 @@ function toNum(v: unknown): number {
 export async function getLecture(lecid: string): Promise<Lecture | null> {
   const rows = await api.get<Record<string, unknown>[]>(
     `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}`,
-    { cache: { revalidate: 300, tags: [`lecture:${lecid}`] } },
+    { cache: { revalidate: 3600, tags: [`lecture:${lecid}`] } },
   );
   const list = Array.isArray(rows) ? rows : [];
   // Prefer the row whose nid matches the requested id; fall back to the first.
