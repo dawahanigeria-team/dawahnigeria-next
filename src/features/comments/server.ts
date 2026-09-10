@@ -99,11 +99,15 @@ export async function getComments(
   let result: unknown;
   try {
     result = await api.get<unknown>(`/commentApi.php?${params.toString()}`, {
-      // Comments are public content now, so they can be cached and revalidated
-      // rather than fetched fresh on every render. Keep it short: a new comment
-      // should appear quickly for the person who just posted it, and posting
-      // revalidates the page path anyway.
-      cache: { revalidate: 60, tags: [`comments:${type}:${itemId}`] },
+      // Deliberately uncached. The URL carries item_id -- and user_id for a
+      // signed-in viewer -- so the fetch-cache key is per (item x viewer),
+      // which is multiplicative and was a leading source of R2 Class A writes.
+      //
+      // Caching bought no freshness either: the Worker's htmlCache holds a
+      // detail page for up to an hour (fresh 3600), so comments were already
+      // only as current as the surrounding HTML. Fetching on an HTML miss is
+      // both cheaper and strictly fresher than a 60s fetch entry.
+      cache: { revalidate: false },
     });
   } catch {
     return [];
