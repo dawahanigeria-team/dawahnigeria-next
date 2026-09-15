@@ -2,6 +2,7 @@
 
 import { getRecitationAlbums, getTrending } from "./listings";
 import { getVideos } from "./video";
+import { getLecturerAlbums, getLecturerLectures } from "./lecturer";
 import { pickResolverFields } from "../lectureFields";
 import type { LectureSummary } from "./landing";
 import type { Video } from "./video";
@@ -36,4 +37,18 @@ export async function fetchRecitationsPage(
 
 export async function fetchVideosPage(page: number): Promise<Video[]> {
   return getVideos(page);
+}
+
+export async function fetchLecturerLecturesPage(
+  lecturerId: string,
+  page: number,
+): Promise<LectureSummary[]> {
+  return pickResolverFields(await getLecturerLectures(lecturerId, page));
+}
+
+export async function fetchLecturerAlbumsPage(
+  lecturerId: string,
+  page: number,
+): Promise<LectureSummary[]> {
+  return pickResolverFields(await getLecturerAlbums(lecturerId, page));
 }

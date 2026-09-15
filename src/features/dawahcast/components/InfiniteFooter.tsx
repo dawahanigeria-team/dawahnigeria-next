@@ -52,14 +52,28 @@ export function InfiniteFooter({
             />
             Loading more…
           </span>
-        ) : done && loadedCount > 0 ? (
-          <span>
-            {loadedCount}{" "}
-            {/* Every noun passed here is a regular plural (lectures, albums,
-                videos, lecturers), so dropping the "s" is enough. */}
-            {loadedCount === 1 ? itemNoun.replace(/s$/, "") : itemNoun}
-          </span>
-        ) : null}
+        ) : done ? (
+          loadedCount > 0 && (
+            <span>
+              {loadedCount}{" "}
+              {/* Every noun passed here is a regular plural (lectures, albums,
+                  videos, lecturers), so dropping the "s" is enough. */}
+              {loadedCount === 1 ? itemNoun.replace(/s$/, "") : itemNoun}
+            </span>
+          )
+        ) : (
+          // The observer only fires when the sentinel enters the viewport; a
+          // fling on a phone can carry it straight past into whatever sits
+          // below the list (comments, the footer), and the list then never
+          // grows. This is the way back, and the keyboard path.
+          <button
+            type="button"
+            onClick={onRetry}
+            className="rounded-md border border-border px-4 py-2 text-foreground transition-colors hover:bg-hover"
+          >
+            Load more {itemNoun}
+          </button>
+        )}
       </div>
     </>
   );

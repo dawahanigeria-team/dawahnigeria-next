@@ -189,6 +189,7 @@ export default async function LecturerPage({
       </header>
 
       <LecturerTabs
+        lecturerId={id}
         lectures={lectures}
         albums={albums}
         playlists={toPlaylistItems(playlistRows)}
