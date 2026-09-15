@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   alternates: { canonical: ROUTES.charts },
 };
 
-// Charts read fresh ranking data each request.
-export const revalidate = 1800;
+// Public ranking data is TTL-cached in the Cache API, not an R2-backed ISR page.
+export const dynamic = "force-dynamic";
 
 type Section = {
   heading: string;

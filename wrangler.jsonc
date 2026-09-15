@@ -60,35 +60,13 @@
   // means /_next/image is never requested, so nothing needs one -- and leaving
   // the binding off is what makes the $0 guarantee structural rather than a
   // setting someone can quietly flip back. Cloudflare Images is metered per
-  // unique transformation with no hard spend cap, and it was the entire
-  // Aug 2026 bill. Read the comment in next.config.mjs before re-adding it.
+  // unique transformation with no hard spend cap. It added $5 to the invoice
+  // issued September 11, alongside R2 writes and Workers CPU overage.
 
-  // Backing store for the ISR/fetch cache (charts revalidate=1800, the tagged
-  // landing fetches). Without it every isolate starts cold and re-fetches.
-  "r2_buckets": [
-    {
-      "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "dn-dawahcast-next-cache"
-    }
-  ],
-
-  // The revalidation queue calls the Worker back to re-render stale pages.
-  "services": [
-    {
-      "binding": "WORKER_SELF_REFERENCE",
-      "service": "dn-dawahcast-next"
-    }
-  ],
-
-  // Deduplicates concurrent revalidations of the same page across the fleet.
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "NEXT_CACHE_DO_QUEUE",
-        "class_name": "DOQueueHandler"
-      }
-    ]
-  },
+  // No R2/KV/D1/service/DO cache bindings. Disposable public API data and HTML
+  // are cached by the Cache API; build-time prerenders ship as static assets.
+  // Retain the historical migration/export for safe deployment and rollback;
+  // no runtime binding calls the old revalidation queue.
   "migrations": [
     {
       "tag": "v1",
@@ -96,18 +74,6 @@
     }
   ]
 
-  // Tag cache — not wired yet. revalidateTag/revalidatePath only need this once
-  // something invalidates *cached* data on demand; today every caller targets a
-  // force-dynamic page, so the calls are no-ops. When the landing-page webhook
-  // lands, create a D1 database and add:
-  //
-  // "d1_databases": [
-  //   {
-  //     "binding": "NEXT_TAG_CACHE_D1",
-  //     "database_name": "dn-dawahcast-next-tags",
-  //     "database_id": "<from `wrangler d1 create`>"
-  //   }
-  // ]
-  //
-  // ...plus `tagCache: d1NextTagCache` in open-next.config.ts.
+  // Public data now expires by TTL, not revalidateTag. Do not add a paid tag
+  // store or cache binding without reviewing the billing implications.
 }
