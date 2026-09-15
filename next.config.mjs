@@ -5,7 +5,7 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Exposes the wrangler.jsonc bindings (R2, Images, the queue DO) to `next dev`,
+// Exposes the wrangler.jsonc bindings (assets and version metadata) to `next dev`,
 // so local runs hit the same cache path as production instead of a no-op stub.
 initOpenNextCloudflareForDev();
 

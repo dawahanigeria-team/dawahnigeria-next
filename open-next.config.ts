@@ -1,16 +1,12 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
-import r2IncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/r2-incremental-cache";
-import { withRegionalCache } from "@opennextjs/cloudflare/overrides/incremental-cache/regional-cache";
-import doQueue from "@opennextjs/cloudflare/overrides/queue/do-queue";
+import staticAssetsIncrementalCache from "@opennextjs/cloudflare/overrides/incremental-cache/static-assets-incremental-cache";
 
 const config = defineCloudflareConfig({
-  // R2 holds the cache; the regional wrapper puts a colo-local Cache API layer
-  // in front so a burst of requests in one data centre costs one R2 read.
-  // "short-lived" keeps entries ~1 minute — long enough to absorb a burst,
-  // short enough that it doesn't stack on top of the page's own revalidate
-  // window the way "long-lived" (up to 30 min) would.
-  incrementalCache: withRegionalCache(r2IncrementalCache, { mode: "short-lived" }),
-  queue: doQueue,
+  // Only build-time prerendered data lives here, shipped as free static assets.
+  // Runtime public data and anonymous HTML use the Cache API, not paid storage.
+  // No ISR routes: runtime refresh is TTL-based and needs no DO queue.
+  incrementalCache: staticAssetsIncrementalCache,
+  queue: "dummy",
 });
 
 // Next 16 builds with Turbopack by default, and its standalone output omits

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { unstable_cache } from "next/cache";
+import { withPublicDataCache } from "@/lib/publicDataCache";
 import { env } from "@/lib/env";
 import { ROUTES } from "@/lib/routes";
 import {
@@ -44,9 +44,8 @@ import {
  * for a file no user waits on.
  *
  * The cost of moving it is one slow response per revalidation window, paid by
- * a crawler rather than a person. `unstable_cache` rather than the route's own
- * `revalidate` because a route can be dynamic or cached, not both: the work is
- * cached here so the route itself can stay off the build.
+ * a crawler rather than a person. A public Cache API entry stores the completed
+ * walk for a day without R2 writes, while the route stays off the build.
  */
 export const dynamic = "force-dynamic";
 
@@ -118,8 +117,7 @@ function lastModifiedOf(row: unknown): Date | undefined {
   return undefined;
 }
 
-const buildSitemap = unstable_cache(
-  async (): Promise<MetadataRoute.Sitemap> => {
+async function buildSitemap(): Promise<MetadataRoute.Sitemap> {
     const base = env.siteUrl;
 
     const staticPaths = [
@@ -188,13 +186,8 @@ const buildSitemap = unstable_cache(
         changeFrequency: "weekly" as const,
       })),
     ]);
-  },
-  ["dawahcast-sitemap"],
-  // Keyed on nothing: there is one sitemap. The tag lets a catalogue import
-  // drop it early via revalidateTag instead of waiting out the window.
-  { revalidate: SITEMAP_TTL_SECONDS, tags: ["sitemap"] },
-);
+}
 
 export default function sitemap(): Promise<MetadataRoute.Sitemap> {
-  return buildSitemap();
+  return withPublicDataCache("dawahcast-sitemap", SITEMAP_TTL_SECONDS, buildSitemap);
 }

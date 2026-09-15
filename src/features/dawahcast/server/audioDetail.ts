@@ -86,6 +86,18 @@ function summarize(tracks: AlbumTrack[]): TrackCollection | null {
 }
 
 /**
+ * Deliberately uncached. Keys built from a lecture or album id are unbounded --
+ * a production tail on 2026-09-09 saw 57 detail requests across 57 distinct ids
+ * with zero repeats -- so each entry is written to R2 once and then never read.
+ * That made these calls pure Class A write cost, which is the metered line.
+ * Repeat views are already served by the Worker's htmlCache (Cache API, free,
+ * DETAIL policy fresh 3600 / stale 86400), so nothing is lost by skipping the
+ * fetch cache here.
+ *
+ * Calls keyed by lecturerId below stay cached on purpose: ~324 scholars is a
+ * bounded set with real reuse across every lecture they appear on.
+ */
+/**
  * GET /leclistingapi.php?lecid={id}
  * Returns the album that contains lecture {id} (the "siblings" view used by
  * the lecture player page). Cached by lecture id for granular invalidation.
@@ -95,7 +107,7 @@ export async function getLectureWithSiblings(
 ): Promise<TrackCollection | null> {
   const tracks = await api.get<AlbumTrack[]>(
     `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}`,
-    { cache: { revalidate: 3600, tags: [`lecture:${lecid}`] } },
+    { cache: { revalidate: false } },
   );
   return summarize(tracks);
 }
@@ -136,7 +148,7 @@ function toNum(v: unknown): number {
 export async function getLecture(lecid: string): Promise<Lecture | null> {
   const rows = await api.get<Record<string, unknown>[]>(
     `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}`,
-    { cache: { revalidate: 3600, tags: [`lecture:${lecid}`] } },
+    { cache: { revalidate: false } },
   );
   const list = Array.isArray(rows) ? rows : [];
   // Prefer the row whose nid matches the requested id; fall back to the first.
@@ -200,7 +212,7 @@ export async function getSimilarByCategory(
 export async function getAlbum(aid: string): Promise<TrackCollection | null> {
   const raw = await api.get<AlbumApi3Track[]>(
     `/albumapi3.php?aid=${encodeURIComponent(aid)}&page=1`,
-    { cache: { revalidate: 600, tags: [`album:${aid}`] } },
+    { cache: { revalidate: false } },
   );
   const tracks: AlbumTrack[] = [];
   for (const r of raw ?? []) {

@@ -1,4 +1,5 @@
 import { env } from "./env";
+import { canCachePublicRequest, withPublicDataCache } from "./publicDataCache";
 
 /**
  * Artwork lives behind img.dawahnigeria.com, a Cloudflare-proxied host that
@@ -38,7 +39,7 @@ function rewriteArtworkHost(body: string): string {
 export type ApiCache = {
   /** Seconds to revalidate. Pass 0 to disable caching. */
   revalidate?: number | false;
-  /** Cache tags for on-demand revalidation. */
+  /** Descriptive groups only; public Cache API entries expire by TTL. */
   tags?: string[];
 };
 
@@ -88,31 +89,33 @@ async function request<T>(path: string, init: Init = {}): Promise<T> {
     headers["X-Authorization"] = `Bearer ${token}`;
   }
 
-  const next: { revalidate?: number; tags?: string[] } = {};
-  if (cache?.revalidate !== undefined && cache.revalidate !== false) {
-    next.revalidate = cache.revalidate;
+  const load = async (): Promise<T> => {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+      // Bypass Next's writable incremental cache. Public reads are cached below,
+      // even on force-dynamic pages; authenticated reads and writes never are.
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const payload = await res.json().catch(() => null);
+      throw new ApiError(
+        res.status,
+        payload,
+        `API ${method} ${path} failed: ${res.status}`,
+      );
+    }
+
+    return JSON.parse(rewriteArtworkHost(await res.text())) as T;
+  };
+
+  const ttl = cache?.revalidate;
+  if (canCachePublicRequest(method, token, ttl)) {
+    return withPublicDataCache(`${env.apiProjectId}:${url}`, ttl, load);
   }
-  if (cache?.tags) next.tags = cache.tags;
-
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body !== undefined ? JSON.stringify(body) : undefined,
-    ...(cache?.revalidate === false
-      ? { cache: "no-store" as const }
-      : { next }),
-  });
-
-  if (!res.ok) {
-    const payload = await res.json().catch(() => null);
-    throw new ApiError(
-      res.status,
-      payload,
-      `API ${method} ${path} failed: ${res.status}`,
-    );
-  }
-
-  return JSON.parse(rewriteArtworkHost(await res.text())) as T;
+  return load();
 }
 
 export const api = {
