@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import type { Language } from "@/features/dawahcast/server/languages";
@@ -44,6 +45,9 @@ export function LanguageSelect({ languages }: { languages: Language[] }) {
   const [selected, setSelected] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Set once Google's token is refused: submitting again would silently fall
+  // through to the no-payload branch and skip account creation.
+  const [mustRestart, setMustRestart] = useState(false);
 
   const isSocialSignup = useSyncExternalStore(
     subscribeNever,
@@ -53,7 +57,7 @@ export function LanguageSelect({ languages }: { languages: Language[] }) {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selected === null) return;
+    if (selected === null || mustRestart) return;
 
     const payload = readSocialPayload();
     if (!payload) {
@@ -68,14 +72,29 @@ export function LanguageSelect({ languages }: { languages: Language[] }) {
 
     setPending(true);
     setError(null);
-    const result = await googleLoginAction({ ...payload, languageId: selected });
-    // Clear the token whatever the outcome — it is single-use and short-lived.
-    sessionStorage.removeItem(SOCIAL_KEY);
-    if (result?.error) {
-      setError(result.error);
+    let result: Awaited<ReturnType<typeof googleLoginAction>>;
+    try {
+      result = await googleLoginAction({ ...payload, languageId: selected });
+    } catch {
+      // The action never ran to completion (offline, deploy mid-flight); the
+      // token is untouched, so keep it for the retry.
+      setError("Network error. Please try again.");
       setPending(false);
+      return;
     }
-    // On success the action redirects and never returns.
+
+    if (!result?.error) {
+      // Redirecting. The token has served its purpose.
+      sessionStorage.removeItem(SOCIAL_KEY);
+      return;
+    }
+
+    setPending(false);
+    setError(result.error);
+    if (!result.retryable) {
+      sessionStorage.removeItem(SOCIAL_KEY);
+      setMustRestart(true);
+    }
   };
 
   return (
@@ -121,13 +140,22 @@ export function LanguageSelect({ languages }: { languages: Language[] }) {
         </p>
       )}
 
-      <AuthSubmitButton
-        pending={pending}
-        disabled={selected === null}
-        pendingLabel="Finishing…"
-      >
-        Continue
-      </AuthSubmitButton>
+      {mustRestart ? (
+        <Link
+          href="/auth/signup"
+          className="flex h-[52px] w-full items-center justify-center rounded-xl bg-[#d6ff00] text-[16px] font-semibold text-black"
+        >
+          Back to sign up
+        </Link>
+      ) : (
+        <AuthSubmitButton
+          pending={pending}
+          disabled={selected === null}
+          pendingLabel="Finishing…"
+        >
+          Continue
+        </AuthSubmitButton>
+      )}
     </form>
   );
 }

@@ -120,6 +120,13 @@ export async function registerAction(
     await writeSessionCookies(session);
   } catch (err) {
     if (err instanceof ApiError) {
+      // Also what a retry sees when the first attempt created the account but
+      // its response never arrived.
+      if (err.status === 409) {
+        return {
+          error: "An account with this email already exists. Sign in instead.",
+        };
+      }
       return { error: "Registration failed. Please try again." };
     }
     return { error: "Network error. Please try again." };
@@ -130,7 +137,12 @@ export async function registerAction(
   redirect("/dawahcast");
 }
 
-export type SocialResult = { error: string } | never;
+/**
+ * `retryable` is false only when Google's token itself was refused, since
+ * resubmitting the same token cannot succeed; the user must go through Google
+ * again. Anything else may be transient, and the token stays valid for an hour.
+ */
+export type SocialResult = { error: string; retryable: boolean } | never;
 
 /**
  * Completes a Google sign-in. The client exchanges the OAuth token for the
@@ -145,20 +157,26 @@ export async function googleLoginAction(input: {
   next?: string;
 }): Promise<SocialResult> {
   if (!input.accessToken || !input.email) {
-    return { error: "Google sign-in failed. Please try again." };
+    return { error: "Google sign-in failed. Please try again.", retryable: false };
   }
 
   try {
     const session = await upstreamSocialLogin(input);
     if (!session) {
-      return { error: "Google sign-in failed. Please try again." };
+      return { error: "Google sign-in failed. Please try again.", retryable: true };
     }
     await writeSessionCookies(session);
   } catch (err) {
-    if (err instanceof ApiError) {
-      return { error: "Google sign-in failed. Please try again." };
+    if (err instanceof ApiError && err.status === 401) {
+      return {
+        error: "Your Google sign-in expired. Please continue with Google again.",
+        retryable: false,
+      };
     }
-    return { error: "Network error. Please try again." };
+    if (err instanceof ApiError) {
+      return { error: "Google sign-in failed. Please try again.", retryable: true };
+    }
+    return { error: "Network error. Please try again.", retryable: true };
   }
 
   await writeAuthEventCookie("login");
