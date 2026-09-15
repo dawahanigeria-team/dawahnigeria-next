@@ -68,6 +68,14 @@ export async function fetchDownloadLinks(
           limit: payload?.free_download_limit,
         };
       }
+      if (err.status === 429) {
+        return {
+          ok: false,
+          code: "upstream",
+          message:
+            "You've downloaded a lot in a short time. Please wait a few minutes and try again.",
+        };
+      }
       // The upstream throws — and so 500s — when a lecture has no `tbl_mp3`
       // row at all. Roughly one in ten of the catalogue is such an orphan, so
       // this is a routine outcome, not an incident.
