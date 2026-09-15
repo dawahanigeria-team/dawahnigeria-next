@@ -81,8 +81,17 @@ export function DownloadButton({
   async function onDownload() {
     setBusy(true);
     setError(null);
-    const result = await fetchDownloadLinks(lectureId);
-    setBusy(false);
+    let result: Awaited<ReturnType<typeof fetchDownloadLinks>>;
+    try {
+      result = await fetchDownloadLinks(lectureId);
+    } catch {
+      // The action itself failed to run (offline, or a tab left open across a
+      // deploy). Without this the button stayed disabled until a reload.
+      setError("Couldn't reach the server. Check your connection and try again.");
+      return;
+    } finally {
+      setBusy(false);
+    }
 
     if (!result.ok) {
       if (result.code === "unauthenticated") {
