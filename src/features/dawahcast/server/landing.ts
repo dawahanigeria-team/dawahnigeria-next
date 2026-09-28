@@ -49,14 +49,12 @@ export type SpecialFeatureGroup = {
 
 /**
  * Editor-curated "special features" groups.
- * Source: POST /spcl_ftr_api.php  (administer base URL)
+ * Source: GET /spcl_ftr_api.php?action=get_spcl_ftr (administer base URL)
  *
  * Revalidates every 10 minutes; tag for webhook-driven invalidation.
  */
 export async function getSpecialFeaturesLectures() {
-  return apiAdminister.post<SpecialFeatureGroup[]>("/spcl_ftr_api.php", {
-    action: "retrieve_spcl_ftr_data",
-  }, {
+  return apiAdminister.get<SpecialFeatureGroup[]>("/spcl_ftr_api.php?action=get_spcl_ftr", {
     cache: { revalidate: 600, tags: [LANDING_TAGS.specialFeatures] },
   });
 }
@@ -68,7 +66,8 @@ export async function getSpecialFeaturesLectures() {
  * page always agree on what a group contains.
  *
  * Wrapped in React cache() because generateMetadata and the page body both
- * need the group, and POST responses don't get Next's fetch-cache dedupe.
+ * need the group within the same render. The GET itself also enters the shared
+ * public-data cache, so later renders in the same edge location avoid PHP.
  */
 export const getVisibleSpecialFeatureGroups = cache(
   async function getVisibleSpecialFeatureGroups(): Promise<SpecialFeatureGroup[]> {
