@@ -132,6 +132,12 @@ export const api = {
 };
 
 export const apiAdminister = {
+  get: <T>(path: string, opts?: Omit<Init, "method" | "body" | "baseUrl">) =>
+    request<T>(path, {
+      ...opts,
+      method: "GET",
+      baseUrl: env.apiAdministerBaseUrl,
+    }),
   post: <T>(path: string, body?: unknown, opts?: Omit<Init, "method" | "body" | "baseUrl">) =>
     request<T>(path, {
       ...opts,
