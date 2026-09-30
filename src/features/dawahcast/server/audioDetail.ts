@@ -206,12 +206,12 @@ export async function getSimilarByCategory(
 }
 
 /**
- * GET /albumapi3.php?aid={id}&page=1
+ * GET /albumapi3.php?aid={id}
  * Returns all tracks for an album.
  */
 export async function getAlbum(aid: string): Promise<TrackCollection | null> {
   const raw = await api.get<AlbumApi3Track[]>(
-    `/albumapi3.php?aid=${encodeURIComponent(aid)}&page=1`,
+    `/albumapi3.php?aid=${encodeURIComponent(aid)}`,
     { cache: { revalidate: false } },
   );
   const tracks: AlbumTrack[] = [];
