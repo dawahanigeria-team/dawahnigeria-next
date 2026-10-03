@@ -31,8 +31,8 @@ type Outcome =
  * Lecture download, ported from CRA's `audioDownloadModal`. Fires the
  * `lecture_downloaded` PostHog event CRA also sends.
  *
- * MP3 only. CRA also offered AMR, but the AMR copies are not carried over when
- * media moves to Backblaze B2, so `amr_url` would stop resolving.
+ * MP3 only. CRA also offered AMR, but the AMR copies were not carried over
+ * when media moved to Cloudflare R2, so `amr_url` no longer resolves.
  *
  * Downloads are sign-in only. The button still renders for everyone — it is
  * how a signed-out visitor discovers the feature, and the pages that render it
