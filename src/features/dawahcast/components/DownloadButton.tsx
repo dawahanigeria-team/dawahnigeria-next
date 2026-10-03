@@ -7,8 +7,6 @@ import { fetchDownloadLinks } from "../server/downloadActions";
 import { isPlayableUrl } from "@/features/player/playableUrl";
 import { capture, EVENTS } from "@/features/analytics/posthog";
 
-type Format = "mp3" | "amr";
-
 /**
  * The upstream returns a bare `"https:"` when it has no file for a format, and
  * an example.com placeholder for records with no real media — see
@@ -18,11 +16,11 @@ type Format = "mp3" | "amr";
 const isUsable = isPlayableUrl;
 
 /** Strip characters that break filenames across platforms. */
-function safeFileName(title: string, format: Format) {
-  return `${title.replace(/[\\/:*?"<>|]+/g, " ").trim()}.${format}`;
+function safeFileName(title: string) {
+  return `${title.replace(/[\\/:*?"<>|]+/g, " ").trim()}.mp3`;
 }
 
-/** What the modal is showing instead of the format picker, if anything. */
+/** What the modal is showing instead of the download prompt, if anything. */
 type Outcome =
   /** `next` is captured at press time — see the `usePathname` note below. */
   | { kind: "signin"; next: string }
@@ -30,8 +28,11 @@ type Outcome =
   | { kind: "done"; remaining: number | null };
 
 /**
- * Lecture download, ported from CRA's `audioDownloadModal`. Offers MP3/AMR and
- * fires the `lecture_downloaded` PostHog event CRA also sends.
+ * Lecture download, ported from CRA's `audioDownloadModal`. Fires the
+ * `lecture_downloaded` PostHog event CRA also sends.
+ *
+ * MP3 only. CRA also offered AMR, but the AMR copies were not carried over
+ * when media moved to Cloudflare R2, so `amr_url` no longer resolves.
  *
  * Downloads are sign-in only. The button still renders for everyone — it is
  * how a signed-out visitor discovers the feature, and the pages that render it
@@ -41,9 +42,7 @@ type Outcome =
  * Links are resolved on the press rather than on open because resolving *is*
  * the charge: the upstream hands out the media URL and spends one of the
  * user's free monthly slots in the same call, so fetching on open would bill
- * people for lectures they only looked at. That is also why the format buttons
- * no longer show sizes or grey themselves out — availability is not known
- * until the file has been claimed.
+ * people for lectures they only looked at.
  */
 export function DownloadButton({
   lectureId,
@@ -56,7 +55,6 @@ export function DownloadButton({
 }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [format, setFormat] = useState<Format>("mp3");
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
@@ -111,31 +109,22 @@ export function DownloadButton({
     }
 
     const { links } = result;
-    const url = format === "mp3" ? links.mp3_url : links.amr_url;
+    const url = links.mp3_url;
     if (!isUsable(url)) {
-      const other: Format = format === "mp3" ? "amr" : "mp3";
-      const otherUrl = other === "mp3" ? links.mp3_url : links.amr_url;
-      // Re-claiming the same lecture inside one calendar month is free
-      // upstream, so pointing the visitor at the other format costs them
-      // nothing even though this attempt already went through.
-      setError(
-        isUsable(otherUrl)
-          ? `No ${format.toUpperCase()} file for this lecture — try ${other.toUpperCase()}.`
-          : "This lecture has no downloadable file yet.",
-      );
+      setError("This lecture has no downloadable file yet.");
       return;
     }
 
     capture(EVENTS.LECTURE_DOWNLOADED, {
       lecture_id: lectureId,
       lecture_title: title,
-      download_format: format,
-      file_size: format === "mp3" ? links.mp3_size : links.amr_size,
+      download_format: "mp3",
+      file_size: links.mp3_size,
     });
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = safeFileName(links.mp3_title || title, format);
+    a.download = safeFileName(links.mp3_title || title);
     a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
@@ -248,35 +237,6 @@ export function DownloadButton({
               </div>
             ) : (
               <>
-                <fieldset className="mb-5">
-                  <legend className="mb-2 text-xs uppercase tracking-wide text-color">
-                    Format
-                  </legend>
-                  <div className="flex gap-2">
-                    {(["mp3", "amr"] as Format[]).map((f) => (
-                      <button
-                        key={f}
-                        type="button"
-                        onClick={() => {
-                          setFormat(f);
-                          setError(null);
-                        }}
-                        className={[
-                          "flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors",
-                          format === f
-                            ? "border-dncolor-500 bg-dncolor-500/10 text-foreground"
-                            : "border-border text-color hover:bg-hover",
-                        ].join(" ")}
-                      >
-                        {format === f && (
-                          <MdCheckCircle className="text-dncolor-500" aria-hidden />
-                        )}
-                        <span className="uppercase">{f}</span>
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-
                 {error && (
                   <p role="alert" className="mb-3 text-xs text-destructive">
                     {error}
