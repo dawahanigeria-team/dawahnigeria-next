@@ -71,7 +71,9 @@ function initSentry(Sentry: typeof SentryTypes, dsnValue: string) {
       process.env.NEXT_PUBLIC_SENTRY_PROFILES_SAMPLE_RATE ?? "1.0",
     ),
     // Carried over from CRA: Tawk's cookie failures are unactionable noise.
-    ignoreErrors: ["Unable to store cookie"],
+    // UC Browser injects a message listener that reads its own `ucConfig`
+    // global, which is missing on our pages; the throw is not our code.
+    ignoreErrors: ["Unable to store cookie", "ucConfig is not defined"],
     beforeSend(event, hint) {
       const original = hint?.originalException as
         | { message?: string; stack?: string }
