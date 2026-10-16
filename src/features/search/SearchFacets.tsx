@@ -37,6 +37,9 @@ export function SearchFacets() {
   const searchParams = useSearchParams();
   const query = (searchParams.get("query") ?? "").trim();
   const sort = searchParams.get("sort") ?? "relevance";
+  // Re-runs the effect on every search navigation, so a query whose facets
+  // failed to load retries when it is searched again; loaded ones are skipped.
+  const navigationKey = searchParams.toString();
 
   const [facets, setFacets] = useState<Facets>(EMPTY);
   const [open, setOpen] = useState<Record<FilterKey, boolean>>({
@@ -51,10 +54,29 @@ export function SearchFacets() {
     const key = `${query}|${sort}`;
     if (!query || loadedFor.current === key) return;
     loadedFor.current = key;
-    fetchSearchFacets(query, sort as "relevance" | "newest" | "oldest").then(
-      setFacets,
-    );
-  }, [query, sort]);
+    let stale = false;
+    let settled = false;
+    fetchSearchFacets(query, sort as "relevance" | "newest" | "oldest")
+      .then((next) => {
+        if (!stale) setFacets(next);
+      })
+      .catch(() => {
+        // The action catches server failures itself, so this is the request
+        // never arriving (offline, a dropped mobile connection). Show no
+        // facets rather than the last query's, and let the next visit retry.
+        if (loadedFor.current === key) loadedFor.current = "";
+        if (!stale) setFacets(EMPTY);
+      })
+      .finally(() => {
+        settled = true;
+      });
+    return () => {
+      stale = true;
+      // An abandoned request must not leave its key marked as loaded, or the
+      // next run for the same query (Strict Mode's remount) would skip it.
+      if (!settled && loadedFor.current === key) loadedFor.current = "";
+    };
+  }, [query, sort, navigationKey]);
 
   if (pathname !== ROUTES.search) return null;
 
