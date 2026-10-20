@@ -9,6 +9,9 @@ if (dsn) {
     dsn,
     environment: process.env.SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
     release: process.env.SENTRY_RELEASE,
+    // `next dev` against an unreachable local API reported ECONNREFUSED and
+    // "bad port" fetch failures from developer machines into the prod project.
+    enabled: process.env.NODE_ENV !== "development",
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.1"),
   });
 }
