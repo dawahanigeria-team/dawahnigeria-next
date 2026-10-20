@@ -53,6 +53,7 @@ export function isTawkError({
  * agree on `value` and `stacktrace.frames`, so one shape serves both reporters.
  */
 export type CapturedException = {
+  type?: unknown;
   value?: unknown;
   stacktrace?: { frames?: Array<{ filename?: string; function?: string }> } | null;
 };
@@ -133,4 +134,86 @@ export function isTawkException(
     message: typeof exception.value === "string" ? exception.value : "",
     stack: framesToStack(exception),
   });
+}
+
+/**
+ * Scripts that iOS browsers (Firefox, and Brave on the same WebKit scaffolding)
+ * inject into every page, which then run against a `window.__firefox__` the
+ * browser never defined. The throw has one frame, "global code" at the page URL,
+ * with no line or column: the page's own code is not on the stack.
+ */
+const BROWSER_INJECTED_PATTERN = /\b__firefox__\b/;
+
+export function isBrowserInjectedScriptError(
+  exception: CapturedException | undefined,
+): boolean {
+  const value = typeof exception?.value === "string" ? exception.value : "";
+  return BROWSER_INJECTED_PATTERN.test(value);
+}
+
+/**
+ * The failure messages browsers use when a request never reached the server.
+ * Chrome says "Failed to fetch", Firefox "NetworkError when attempting to fetch
+ * resource.", Safari "Load failed", and some Opera builds just "network error".
+ */
+const NETWORK_FAILURE_PATTERN =
+  /^(Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.?|network error)$/i;
+
+/**
+ * A fetch that died on the visitor's connection. This app only fetches its own
+ * origin from the browser (server actions and RSC navigations), so the report
+ * says the visitor was offline or on a dropped mobile link, not that anything
+ * here is broken. The UI already offers a retry.
+ */
+export function isClientNetworkFailure(
+  exception: CapturedException | undefined,
+): boolean {
+  if (exception?.type !== "TypeError") return false;
+  const value = typeof exception.value === "string" ? exception.value : "";
+  return NETWORK_FAILURE_PATTERN.test(value.trim());
+}
+
+/**
+ * A tab that outlived a deploy. Server Action ids are hashed per build, so the
+ * old page posts an id the new server has never heard of and Next throws this.
+ * Reloading fixes it, and nothing in the source can prevent it.
+ */
+export function isStaleServerAction(
+  exception: CapturedException | undefined,
+): boolean {
+  return exception?.type === "UnrecognizedActionError";
+}
+
+/**
+ * React's streaming runtime ($RS, $RC, $RR) is an inline script that swaps a
+ * Suspense fallback for the streamed content by looking up placeholder nodes by
+ * id. When something else has already rewritten that DOM (a translation
+ * feature, a data-saver proxy, an extension) the lookup returns null and the
+ * script throws. It is not the app's code, and the same sessions log hydration
+ * mismatch #418 first.
+ */
+const REACT_STREAM_INSTRUCTIONS = /^\$R[A-Z]?$/;
+
+export function isStreamedMarkupTampering(
+  exception: CapturedException | undefined,
+): boolean {
+  if (exception?.type !== "TypeError") return false;
+  const value = typeof exception.value === "string" ? exception.value : "";
+  if (!value.includes("reading 'parentNode'")) return false;
+  const frames = exception.stacktrace?.frames ?? [];
+  return frames.some((frame) =>
+    REACT_STREAM_INSTRUCTIONS.test(frame?.function ?? ""),
+  );
+}
+
+/** Reports that no code in this repo can cause or fix. Sentry's `beforeSend` uses it. */
+export function isUnactionableClientError(
+  exception: CapturedException | undefined,
+): boolean {
+  return (
+    isBrowserInjectedScriptError(exception) ||
+    isClientNetworkFailure(exception) ||
+    isStaleServerAction(exception) ||
+    isStreamedMarkupTampering(exception)
+  );
 }

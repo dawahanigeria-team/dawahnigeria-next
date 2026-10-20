@@ -1,5 +1,5 @@
 import type * as SentryTypes from "@sentry/nextjs";
-import { isTawkError } from "@/lib/thirdPartyErrors";
+import { isTawkError, isUnactionableClientError } from "@/lib/thirdPartyErrors";
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
@@ -44,6 +44,7 @@ function initSentry(Sentry: typeof SentryTypes, dsnValue: string) {
     environment:
       process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT ?? process.env.NODE_ENV,
     release: process.env.NEXT_PUBLIC_SENTRY_RELEASE,
+    enabled: process.env.NODE_ENV !== "development",
     tracesSampleRate: Number(
       process.env.NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE ?? "0.1",
     ),
@@ -75,6 +76,8 @@ function initSentry(Sentry: typeof SentryTypes, dsnValue: string) {
     // global, which is missing on our pages; the throw is not our code.
     ignoreErrors: ["Unable to store cookie", "ucConfig is not defined"],
     beforeSend(event, hint) {
+      if (isUnactionableClientError(event.exception?.values?.[0])) return null;
+
       const original = hint?.originalException as
         | { message?: string; stack?: string }
         | undefined;
