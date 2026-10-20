@@ -2,9 +2,15 @@
 
 const STORAGE_TEST_KEY = "__dn_tawk_probe__";
 
-function canUseStorage(storage: Storage | undefined): boolean {
-  if (!storage) return false;
+/**
+ * Takes a getter because merely reading `window.localStorage` throws a
+ * SecurityError when storage is blocked (sandboxed frames, some WebViews), so
+ * the property access has to sit inside the try.
+ */
+function canUseStorage(getStorage: () => Storage | undefined): boolean {
   try {
+    const storage = getStorage();
+    if (!storage) return false;
     storage.setItem(STORAGE_TEST_KEY, "1");
     storage.removeItem(STORAGE_TEST_KEY);
     return true;
@@ -41,7 +47,10 @@ export function shouldLoadTawkWidget(): boolean {
   if (isDoNotTrackEnabled()) return false;
   if (navigator.cookieEnabled === false) return false;
 
-  return canUseStorage(window.localStorage) && canUseStorage(window.sessionStorage);
+  return (
+    canUseStorage(() => window.localStorage) &&
+    canUseStorage(() => window.sessionStorage)
+  );
 }
 
 /**
