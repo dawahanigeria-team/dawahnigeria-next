@@ -29,6 +29,16 @@ function onPlayFailure(err: unknown) {
   console.error(`[player] playback failed: ${e?.name}: ${e?.message}`);
 }
 
+/**
+ * `play()` is typed as always returning a promise, but a script in the visitor's
+ * browser can replace it with one that returns nothing. Chaining `.catch` on that threw inside an effect of
+ * this root-layout component, which replaced the whole document with
+ * global-error and stopped playback (DAWAHNIGERIA-NEXT-V).
+ */
+function play(audio: HTMLAudioElement, onFailure: (err: unknown) => void) {
+  (audio.play() as Promise<void> | undefined)?.catch(onFailure);
+}
+
 /** PlayerTrack → the shape the analytics helpers expect. */
 function forAnalytics(track: PlayerTrack) {
   return {
@@ -123,7 +133,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       // Selecting a track while another is already playing leaves `playing`
       // true, so the play/pause effect below never re-runs. Start it here.
       if (usePlayer.getState().playing) {
-        audio.play().catch(onPlayFailure);
+        play(audio, onPlayFailure);
       }
     }
   }, [track]);
@@ -133,7 +143,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     const audio = audioRef.current;
     if (!audio) return;
     if (playing) {
-      audio.play().catch(onPlayFailure);
+      play(audio, onPlayFailure);
     } else {
       audio.pause();
     }
@@ -226,7 +236,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
             const audio = audioRef.current;
             if (audio) {
               audio.currentTime = 0;
-              audio.play().catch(() => {});
+              play(audio, () => {});
             }
           }
         }}
