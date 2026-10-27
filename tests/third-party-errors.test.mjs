@@ -12,6 +12,14 @@ const noise = [
   ["Safari offline", { type: "TypeError", value: "Load failed" }],
   ["Safari offline, naming the host", { type: "TypeError", value: "Load failed (img.dawahnigeria.com)" }],
   ["Opera offline", { type: "TypeError", value: "network error" }],
+  [
+    "MetaMask's in-page script",
+    {
+      type: "Error",
+      value: "MetaMask extension not found",
+      stacktrace: { frames: [{ filename: "app:///scripts/inpage.js" }] },
+    },
+  ],
   ["stale action", { type: "UnrecognizedActionError", value: 'Server Action "6" was not found on the server.' }],
   [
     "React $RS on a rewritten DOM",

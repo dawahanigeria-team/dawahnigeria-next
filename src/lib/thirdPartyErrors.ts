@@ -211,12 +211,29 @@ export function isStreamedMarkupTampering(
   );
 }
 
+/**
+ * MetaMask's extension injects `scripts/inpage.js` into every page and rejects
+ * "MetaMask extension not found" when it cannot reach its own background page.
+ * This app has no wallet code. The frame cannot carry the evidence: Sentry's
+ * Next.js integration rewrites the `chrome-extension://` origin to `app://`
+ * before `beforeSend` runs, so the match is on the name instead.
+ */
+const WALLET_EXTENSION_PATTERN = /\bMetaMask\b/;
+
+export function isWalletExtensionError(
+  exception: CapturedException | undefined,
+): boolean {
+  const value = typeof exception?.value === "string" ? exception.value : "";
+  return WALLET_EXTENSION_PATTERN.test(value);
+}
+
 /** Reports that no code in this repo can cause or fix. Sentry's `beforeSend` uses it. */
 export function isUnactionableClientError(
   exception: CapturedException | undefined,
 ): boolean {
   return (
     isBrowserInjectedScriptError(exception) ||
+    isWalletExtensionError(exception) ||
     isClientNetworkFailure(exception) ||
     isStaleServerAction(exception) ||
     isStreamedMarkupTampering(exception)
