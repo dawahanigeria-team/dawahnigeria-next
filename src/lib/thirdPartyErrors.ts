@@ -154,16 +154,21 @@ export function isBrowserInjectedScriptError(
 /**
  * The failure messages browsers use when a request never reached the server.
  * Chrome says "Failed to fetch", Firefox "NetworkError when attempting to fetch
- * resource.", Safari "Load failed", and some Opera builds just "network error".
+ * resource.", Safari "Load failed" (newer versions append the host, as in
+ * "Load failed (img.dawahnigeria.com)"), and some Opera builds "network error".
  */
 const NETWORK_FAILURE_PATTERN =
-  /^(Failed to fetch|Load failed|NetworkError when attempting to fetch resource\.?|network error)$/i;
+  /^(Failed to fetch|Load failed(?: \([^\s()]+\))?|NetworkError when attempting to fetch resource\.?|network error)$/i;
 
 /**
  * A fetch that died on the visitor's connection. This app only fetches its own
  * origin from the browser (server actions and RSC navigations), so the report
  * says the visitor was offline or on a dropped mobile link, not that anything
  * here is broken. The UI already offers a retry.
+ *
+ * A failure naming another host is not ours either: Opera Touch on iOS fetches
+ * the Media Session artwork from img.dawahnigeria.com with the page's `fetch`,
+ * and that host sends no CORS headers, so every attempt fails.
  */
 export function isClientNetworkFailure(
   exception: CapturedException | undefined,

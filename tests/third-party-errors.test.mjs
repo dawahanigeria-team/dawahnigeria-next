@@ -10,6 +10,7 @@ const noise = [
   ["Firefox iOS missing global", { type: "ReferenceError", value: "Can't find variable: __firefox__" }],
   ["Chrome offline", { type: "TypeError", value: "Failed to fetch" }],
   ["Safari offline", { type: "TypeError", value: "Load failed" }],
+  ["Safari offline, naming the host", { type: "TypeError", value: "Load failed (img.dawahnigeria.com)" }],
   ["Opera offline", { type: "TypeError", value: "network error" }],
   ["stale action", { type: "UnrecognizedActionError", value: 'Server Action "6" was not found on the server.' }],
   [
@@ -32,6 +33,7 @@ const real = [
   ["other TypeError", { type: "TypeError", value: "x is not a function" }],
   ["fetch message on a non-TypeError", { type: "Error", value: "Failed to fetch" }],
   ["longer fetch message", { type: "TypeError", value: "Failed to fetch dynamically imported module" }],
+  ["Load failed with more than a host", { type: "TypeError", value: "Load failed (chunk 4017 could not be parsed)" }],
 ];
 
 for (const [name, exception] of real) {
