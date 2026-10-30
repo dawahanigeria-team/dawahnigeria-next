@@ -1,5 +1,10 @@
 import type * as SentryTypes from "@sentry/nextjs";
 import { isTawkError, isUnactionableClientError } from "@/lib/thirdPartyErrors";
+import { makeTranslationSafe } from "@/lib/translationSafeDom";
+
+// Before hydration, and independent of the Sentry DSN, so translated pages
+// survive React's next DOM write even where reporting is off.
+if (typeof window !== "undefined") makeTranslationSafe(Node.prototype);
 
 const dsn = process.env.NEXT_PUBLIC_SENTRY_DSN;
 
