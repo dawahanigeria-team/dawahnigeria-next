@@ -2,7 +2,7 @@
   "name": "dawahnigeria-next",
   "version": "0.1.0",
   "private": true,
-  "description": "Next.js web frontend for dawahnigeria.com — discovering and listening to Islamic lectures.",
+  "description": "Next.js web frontend for dawahnigeria.com \u2014 discovering and listening to Islamic lectures.",
   "license": "Apache-2.0",
   "homepage": "https://dawahnigeria.com",
   "repository": {
@@ -13,10 +13,10 @@
     "url": "https://github.com/dawahanigeria-team/dawahnigeria-next/issues"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "opennextjs-cloudflare build",
-    "build:next": "next build --webpack",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && opennextjs-cloudflare build",
+    "build:next": "node init && next build --webpack",
+    "start": "node init && next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "cf:build": "opennextjs-cloudflare build",
@@ -29,7 +29,7 @@
     "@react-oauth/google": "^0.13.5",
     "@sentry/nextjs": "^10.75.0",
     "next": "^16.3.6",
-    "posthog-js": "^1.435.6",
+    "posthog-js": "^1.443.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-icons": "^5.4.0",
