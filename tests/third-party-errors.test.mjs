@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   isUnactionableClientError,
   isClientNetworkFailure,
+  isWalletProviderRejection,
 } from "../src/lib/thirdPartyErrors.ts";
 
 const noise = [
@@ -50,4 +51,20 @@ for (const [name, exception] of real) {
 
 test("undefined exception is kept", () => {
   assert.equal(isClientNetworkFailure(undefined), false);
+});
+
+test("drops a wallet extension's plain-object rejection", () => {
+  assert.equal(
+    isWalletProviderRejection({ code: 4001, message: "wallet must has at least one account" }),
+    true,
+  );
+});
+
+test("keeps an Error that happens to carry a provider code", () => {
+  const error = Object.assign(new Error("boom"), { code: 4001 });
+  assert.equal(isWalletProviderRejection(error), false);
+});
+
+test("keeps a plain object with an unrelated code", () => {
+  assert.equal(isWalletProviderRejection({ code: 500, message: "Internal" }), false);
 });
