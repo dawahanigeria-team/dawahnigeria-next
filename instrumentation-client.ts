@@ -1,5 +1,9 @@
 import type * as SentryTypes from "@sentry/nextjs";
-import { isTawkError, isUnactionableClientError } from "@/lib/thirdPartyErrors";
+import {
+  isTawkError,
+  isUnactionableClientError,
+  isWalletProviderRejection,
+} from "@/lib/thirdPartyErrors";
 import { makeTranslationSafe } from "@/lib/translationSafeDom";
 
 // Before hydration, and independent of the Sentry DSN, so translated pages
@@ -82,6 +86,7 @@ function initSentry(Sentry: typeof SentryTypes, dsnValue: string) {
     ignoreErrors: ["Unable to store cookie", "ucConfig is not defined"],
     beforeSend(event, hint) {
       if (isUnactionableClientError(event.exception?.values?.[0])) return null;
+      if (isWalletProviderRejection(hint?.originalException)) return null;
 
       const original = hint?.originalException as
         | { message?: string; stack?: string }
