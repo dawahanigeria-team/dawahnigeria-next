@@ -227,6 +227,25 @@ export function isWalletExtensionError(
   return WALLET_EXTENSION_PATTERN.test(value);
 }
 
+/**
+ * EIP-1193 provider error codes (user rejected, unauthorized, unsupported,
+ * disconnected). Wallet extensions reject with a plain `{ code, message }`
+ * object, not an Error, which Sentry reports only as "Object captured as
+ * exception with keys: code, message". This app has no wallet code.
+ */
+const WALLET_PROVIDER_CODES = new Set([4001, 4100, 4200, 4900, 4901]);
+
+export function isWalletProviderRejection(original: unknown): boolean {
+  if (typeof original !== "object" || original === null) return false;
+  if (original instanceof Error) return false;
+  const { code, message } = original as { code?: unknown; message?: unknown };
+  return (
+    typeof code === "number" &&
+    WALLET_PROVIDER_CODES.has(code) &&
+    typeof message === "string"
+  );
+}
+
 /** Reports that no code in this repo can cause or fix. Sentry's `beforeSend` uses it. */
 export function isUnactionableClientError(
   exception: CapturedException | undefined,
