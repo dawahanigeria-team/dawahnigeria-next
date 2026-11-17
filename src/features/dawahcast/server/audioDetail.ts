@@ -106,7 +106,7 @@ export async function getLectureWithSiblings(
   lecid: string,
 ): Promise<TrackCollection | null> {
   const tracks = await api.get<AlbumTrack[]>(
-    `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}`,
+    `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}&count=0`,
     { cache: { revalidate: false } },
   );
   return summarize(tracks);
@@ -147,7 +147,7 @@ function toNum(v: unknown): number {
  */
 export async function getLecture(lecid: string): Promise<Lecture | null> {
   const rows = await api.get<Record<string, unknown>[]>(
-    `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}`,
+    `/leclistingapi.php?lecid=${encodeURIComponent(lecid)}&count=0`,
     { cache: { revalidate: false } },
   );
   const list = Array.isArray(rows) ? rows : [];
