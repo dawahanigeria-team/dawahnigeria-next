@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { usePlayer } from "./store";
 import { PlayerBar } from "./PlayerBar";
@@ -11,6 +11,11 @@ import {
   trackLecturePlay,
 } from "@/features/analytics/posthog";
 import type { PlayerTrack } from "./types";
+import {
+  createPlayTracker,
+  sendPlayEvent,
+  type PlayEventEndpoint,
+} from "./playEvents";
 
 /**
  * Every way `play()` can reject ends the same way for the listener: silence.
@@ -70,7 +75,16 @@ function forAnalytics(track: PlayerTrack) {
  * pathname while the audio element itself stays mounted everywhere. Audio keeps
  * playing while signing in; only the controls are hidden.
  */
-export function PlayerProvider({ children }: { children: React.ReactNode }) {
+export function PlayerProvider({
+  children,
+  playEventEndpoint,
+}: {
+  children: React.ReactNode;
+  playEventEndpoint: PlayEventEndpoint;
+}) {
+  const [playTracker] = useState(() =>
+    createPlayTracker((id) => sendPlayEvent(id, playEventEndpoint)),
+  );
   const audioRef = useRef<HTMLAudioElement>(null);
   const pathname = usePathname();
   const showChrome = pathname?.startsWith("/dawahcast") ?? false;
@@ -214,14 +228,23 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       <audio
         ref={audioRef}
         preload="metadata"
-        onTimeUpdate={(e) =>
-          usePlayer.getState().setPosition(e.currentTarget.currentTime)
-        }
+        onTimeUpdate={(e) => {
+          const { track: current, setPosition } = usePlayer.getState();
+          setPosition(e.currentTarget.currentTime);
+          if (current) {
+            playTracker.tick({
+              lectureId: current.id,
+              isPlaying: !e.currentTarget.paused,
+              nowMs: performance.now(),
+            });
+          }
+        }}
         onLoadedMetadata={(e) =>
           usePlayer.getState().setDuration(e.currentTarget.duration || 0)
         }
         onEnded={() => {
           mediaIsPlaying.current = false;
+          playTracker.startNewListen();
           const ended = usePlayer.getState().track;
           if (ended) {
             // Reached the end, so listen duration is the full track length.
@@ -289,6 +312,15 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
           // Some browser integrations dispatch `pause` without actually
           // pausing the media element. Ignore those events entirely.
           if (!e.currentTarget.paused) return;
+
+          const pausedTrack = usePlayer.getState().track;
+          if (pausedTrack) {
+            playTracker.tick({
+              lectureId: pausedTrack.id,
+              isPlaying: false,
+              nowMs: performance.now(),
+            });
+          }
 
           // The `pause` the browser emits while swapping src is not the user
           // pausing — consume it and leave the store alone.
