@@ -121,7 +121,14 @@ export default function RootLayout({
         {/* Hosts the single <audio> element. It lives at the root, not in the
             dawahcast layout, so that no route change can unmount it and stop
             playback. The player's own chrome stays scoped to the app shell. */}
-        <PlayerProvider>{children}</PlayerProvider>
+        <PlayerProvider
+          playEventEndpoint={{
+            url: `${env.apiBaseUrl}/play_event_api.php`,
+            projectId: env.apiProjectId,
+          }}
+        >
+          {children}
+        </PlayerProvider>
         {/* Client-only; renders nothing. Covers auth pages as well as the app. */}
         <AnalyticsProvider />
         <WebVitals />
