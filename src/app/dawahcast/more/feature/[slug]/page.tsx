@@ -12,12 +12,20 @@ const PAGE_SIZE = 10;
 
 const normalize = (name: string) => name.trim().toLowerCase();
 
+// The page body receives the segment still percent-encoded on this Next
+// version (generateMetadata gets it decoded), so decode before comparing.
+const decodeSlug = (slug: string) => {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+};
+
 /**
  * The group the slug names, or null if no such group exists.
  *
- * Next has already percent-decoded `params.slug` by the time it reaches here,
- * and rejects malformed escapes in the router before this runs — so the raw
- * param is the group name. An upstream failure is deliberately left to throw:
+ * An upstream failure is deliberately left to throw:
  * it belongs in dawahcast/error.tsx, because answering 404 would tell crawlers
  * a live section had been deleted every time the admin endpoint blips.
  */
@@ -25,7 +33,7 @@ async function findGroup(slug: string): Promise<SpecialFeatureGroup | null> {
   // Same request-cached load the landing rows use, so this page costs no
   // extra upstream traffic and always agrees with the row it was linked from.
   const groups = await getVisibleSpecialFeatureGroups();
-  const target = normalize(slug);
+  const target = normalize(decodeSlug(slug));
   return groups.find((group) => normalize(group.name) === target) ?? null;
 }
 
